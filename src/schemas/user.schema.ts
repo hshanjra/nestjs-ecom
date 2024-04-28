@@ -52,6 +52,9 @@ export class User {
   /* one-to-one */
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Merchant' })
   merchantId: Merchant;
+
+  // @Prop({ type: Boolean, default: false })
+  // isMerchantVerified: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

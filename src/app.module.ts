@@ -8,6 +8,7 @@ import { OrderModule } from './order/order.module';
 import { CloudinaryModule } from './utility/cloudinary/cloudinary.module';
 import { SellerModule } from './seller/seller.module';
 import { StripeModule } from './utility/stripe/stripe.module';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { StripeModule } from './utility/stripe/stripe.module';
     CloudinaryModule,
     SellerModule,
     StripeModule,
+    CategoryModule,
   ],
   controllers: [],
   providers: [],

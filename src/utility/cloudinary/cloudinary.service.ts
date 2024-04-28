@@ -13,6 +13,21 @@ export class CloudinaryService {
       api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
     });
   }
+
+  private getPublicIdFromUrl(imageUrl: string): string {
+    // Extract public ID from Cloudinary image URL
+    const parts = imageUrl.split('/');
+    const publicIdWithExtension = parts[parts.length - 1];
+    const publicId = publicIdWithExtension.split('.')[0]; // Remove file extension
+    return publicId;
+  }
+
+  async deleteImage(imageUrl: string) {
+    const publicId = this.getPublicIdFromUrl(imageUrl);
+    const result = await cloudinary.uploader.destroy(publicId);
+    return result;
+  }
+
   async uploadSingleImage(image: Express.Multer.File) {
     const result = await cloudinary.uploader.upload(image.path);
 

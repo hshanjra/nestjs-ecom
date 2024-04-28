@@ -1,4 +1,5 @@
 /* FOR SELLERS */ import {
+  BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -10,6 +11,11 @@ import { Model } from 'mongoose';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { ProductImage } from 'src/interfaces';
 import { CompatiblePartsQuery } from './dto/compatible-query.dto';
+
+interface paginateArgs {
+  page: number;
+  pageSize: number;
+}
 
 @Injectable()
 export class ProductService {
@@ -64,8 +70,63 @@ export class ProductService {
     return sellerProducts;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async updateSellerProduct(
+    slug: string,
+    dto: UpdateProductDto,
+    images?: Express.Multer.File[],
+  ) {
+    const merchantId = '6621547d2b57a5386df7c45e';
+
+    const product = await this.productModel.findOne({
+      productSlug: slug,
+      merchantId: merchantId,
+    });
+
+    if (!product) throw new NotFoundException('Product not found');
+
+    //hanlde images
+    if (images && images.length > 0) {
+      for (const file of images) {
+        const allowedTypes = [
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'image/jpg',
+          'image/webp',
+        ];
+        if (!allowedTypes.includes(file.mimetype)) {
+          throw new BadRequestException(
+            'Product images must be of type JPEG, PNG, GIF, WebP.',
+          );
+        }
+        // Upload Images on clodinary if available
+        const uploadedImages = await Promise.all(
+          images.map((image) =>
+            this.cloudinaryService.uploadSingleImage(image),
+          ),
+        );
+
+        const productImages = uploadedImages.map((image) => ({
+          url: image.url,
+          alt: image.alt,
+          filetype: image.fileType,
+        }));
+
+        //push the new product images
+        product.productImages.push(...productImages);
+      }
+    }
+    //hanlde form data
+
+    // Update product data
+    Object.assign(product, dto);
+
+    //TODO: remove sensitive fields
+
+    // Save the updated product data
+    await product.save();
+
+    return product;
   }
 
   remove(id: number) {
@@ -77,7 +138,9 @@ export class ProductService {
     //TODO: add pagination and offset
     const allProducts = await this.productModel
       .find({ isActive: true })
-      .select('-merchantId -updatedAt -compatibilityWith -isActive -__v');
+      .populate('productCategory', 'categoryName categorySlug')
+      .select('-merchantId -updatedAt -compatibilityWith -isActive -__v')
+      .exec();
     if (!allProducts) throw new NotFoundException('No products found.');
     return allProducts;
   }

@@ -49,7 +49,7 @@ export class Product {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
-    // required: true, //TODO: uncomment this line
+    required: true,
   })
   productCategory: Category;
 
@@ -124,7 +124,7 @@ export class Product {
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
 ProductSchema.pre('save', async function (next) {
-  if (!this.isModified('productTitle')) return next();
+  if (!this.isModified('productSlug')) return next();
 
   const slugBase = slugify(this.productTitle, { lower: true });
   let slug = slugBase;

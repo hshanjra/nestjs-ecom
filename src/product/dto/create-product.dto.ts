@@ -13,10 +13,6 @@ export class CreateProductDto {
   @IsNotEmpty()
   productTitle: string;
 
-  // @IsString()
-  // @IsNotEmpty()
-  // productSlug: string;
-
   @IsString()
   @IsNotEmpty()
   productBrand: string;
@@ -49,8 +45,8 @@ export class CreateProductDto {
   productHeight: number;
 
   @IsString()
-  @IsOptional() // todo: remove this after testing
-  productCategory?: string;
+  @IsNotEmpty()
+  productCategory: string;
 
   @IsNumberString()
   @IsNotEmpty()
@@ -71,6 +67,10 @@ export class CreateProductDto {
   @IsNumberString()
   @IsNotEmpty()
   salePrice: number;
+
+  @IsOptional()
+  @IsNotEmpty()
+  images: Express.Multer.File[];
 
   // @IsString()
   // specDocument: string;
