@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Merchant } from './merchant.schema';
 import * as bcrypt from 'bcrypt';
+import { Role } from 'src/auth/enums';
 
 enum accountStatus {
   ACTIVE = 'ACTIVE',
@@ -31,10 +32,10 @@ export class User {
 
   @Prop({
     type: Array,
-    enum: ['CUSTOMER', 'SELLER'],
-    default: ['CUSTOMER'],
+    enum: Role,
+    default: Role.CUSTOMER,
   })
-  roles: Array<string>;
+  roles: Array<Role>;
 
   @Prop({ type: Boolean, default: false })
   isEmailVerified: boolean;
