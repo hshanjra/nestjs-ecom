@@ -1,5 +1,6 @@
 import {
   HttpException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -31,14 +32,17 @@ export class AuthService {
   }
 
   async signUp(singUpDto: SignUpDto) {
-    let existingUser = null;
-    existingUser = await this.usersService.findOneWithEmailOrUsername(
+    const existingUser = await this.usersService.findUserWithEmail(
       singUpDto.email,
     );
-    if (existingUser) throw new HttpException('User already exists.', 409);
-    existingUser = await this.usersService.findUserWithPhone(singUpDto.phone);
     if (existingUser)
-      throw new HttpException('User already exists with this phone.', 409);
+      throw new HttpException(
+        'Email already in use.',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    // existingUser = await this.usersService.findUserWithPhone(singUpDto.phone);
+    // if (existingUser)
+    //   throw new HttpException('User already exists with this phone.', 409);
 
     const user = await this.usersService.create(singUpDto);
     const payload = {

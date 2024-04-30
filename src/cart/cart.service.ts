@@ -68,7 +68,7 @@ export class CartService {
     return session.cart;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cart`;
+  async remove(session: Record<string, any>) {
+    return await session.destroy();
   }
 }

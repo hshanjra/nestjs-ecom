@@ -14,7 +14,7 @@ import { CartDto } from './dto/cart.dto';
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
-  @Post('update')
+  @Post()
   updateCart(@Body() dto: CartDto, @Session() session: Record<string, any>) {
     return this.cartService.update(dto, session);
   }
@@ -24,8 +24,8 @@ export class CartController {
     return this.cartService.getCartItems(session);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cartService.remove(+id);
+  @Delete()
+  remove(@Session() session: Record<string, any>) {
+    return this.cartService.remove(session);
   }
 }

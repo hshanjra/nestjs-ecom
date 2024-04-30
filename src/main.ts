@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { MongoSessionStore } from './utility/store/mongo-session.store';
 import helmet from 'helmet';
 import * as session from 'express-session';
-import { MongoSessionStore } from './utility/store/mongo-session.store';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,7 +13,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
+      // whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
     }),

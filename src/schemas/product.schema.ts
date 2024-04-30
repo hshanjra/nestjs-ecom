@@ -92,7 +92,7 @@ export class Product {
   isActive: boolean;
 
   @Prop({ type: Boolean, default: false })
-  isGenericProduct: boolean;
+  isUniversal: boolean;
 
   @Prop({ type: Number, default: 0 })
   salesCount: number;
@@ -147,3 +147,9 @@ ProductSchema.pre('save', async function (next) {
 });
 
 ProductSchema.index({ productSlug: 1 }, { unique: true });
+ProductSchema.set('toJSON', {
+  transform(doc, ret, options) {
+    delete ret.merchantId;
+    delete ret.isActive;
+  },
+});
