@@ -10,6 +10,7 @@ import {
 import { AdminsService } from './admins.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
+import { TaxRateDto } from './dto/tax-rate.dto';
 
 @Controller('admins')
 //TODO: add admin guard
@@ -39,5 +40,17 @@ export class AdminsController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.adminsService.remove(+id);
+  }
+
+  /* TAX */
+
+  @Get('tax/tax-rate')
+  getAllTaxRates() {
+    return this.adminsService.getAllTaxRates();
+  }
+
+  @Post('tax/tax-rate')
+  createTaxRate(@Body() dto: TaxRateDto) {
+    return this.adminsService.createTaxRate(dto);
   }
 }

@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
-import { Merchant } from './merchant.schema';
 import { User } from './user.schema';
 import {
   IAddress,
@@ -8,27 +7,15 @@ import {
   ITrackingInfo,
   OrderItem,
 } from 'src/interfaces';
-
-enum OrderStatus {
-  PENDING = 'PENDING',
-  FAILED = 'FAILED',
-  CANCELLED = 'CANCELLED',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-}
-enum ShippingCarrier {
-  USPS = 'USPS',
-  UPS = 'UPS',
-  FEDEX = 'FEDEX',
-  DHL = 'DHL',
-}
+import { OrderStatus, paymentResponse, ShippingCarrier } from 'src/order/enums';
 
 @Schema({ timestamps: true })
 export class Order {
   @Prop({ _id: Number })
   _id: number;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true })
+  // customer id could be blank if user is not logged in i.e. guest checkout
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   customerId: User;
 
   @Prop({
@@ -36,9 +23,10 @@ export class Order {
     type: [
       {
         name: { type: String },
-        qty: { required: true, type: Number, default: 1 },
-        price: { required: true, type: Number },
-        tax: { required: true, type: Number, default: 0.0 },
+        qty: { type: Number, default: 1, required: true },
+        price: { type: Number, required: true },
+        tax: { type: Number, default: 0.0 },
+        subTotal: { type: Number, required: true },
         productId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Product',
@@ -51,53 +39,49 @@ export class Order {
 
   @Prop({
     required: true,
-    type: [
-      {
-        billingAddress: {
-          firstName: String,
-          lastName: String,
-          companyName: String,
-          streetAddress: String,
-          city: String,
-          state: String,
-          zipCode: String,
-          country: String,
-        },
-        shippingAddress: {
-          firstName: String,
-          lastName: String,
-          phone: Number,
-          streetAddress: String,
-          city: String,
-          state: String,
-          zipCode: String,
-          country: String,
-        },
-      },
-    ],
-  })
-  address: IAddress[];
-
-  @Prop({
     type: {
-      trackingNumber: Number,
-      shippingCarrier: {
-        enum: ShippingCarrier,
-        required: true,
+      billingAddress: {
+        firstName: String,
+        lastName: String,
+        companyName: String,
+        streetAddress: String,
+        city: String,
+        state: String,
+        zipCode: String,
+        country: String,
       },
-      shippedAt: Date,
     },
   })
-  trackingInfo: ITrackingInfo;
+  billingAddress: IAddress;
+
+  @Prop({
+    required: true,
+    type: {
+      shippingAddress: {
+        firstName: String,
+        lastName: String,
+        phone: Number,
+        streetAddress: String,
+        city: String,
+        state: String,
+        zipCode: String,
+        country: String,
+      },
+    },
+  })
+  shippingAddress: IAddress;
 
   @Prop({ type: String })
   paymentMethod: string;
 
   @Prop({
-    required: true,
     type: {
-      txnId: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
-      status: String,
+      txnId: String,
+      status: {
+        type: String,
+        enum: paymentResponse,
+        default: paymentResponse.PAYMENT_OPEN,
+      },
     },
   })
   paymentResponse: IPaymentResponse;
@@ -117,20 +101,69 @@ export class Order {
   @Prop({
     type: String,
     enum: OrderStatus,
-    default: OrderStatus.PENDING,
+    default: OrderStatus.ORDER_PENDING,
   })
   orderStatus: OrderStatus;
 
   @Prop({ type: String })
   orderNotes: string;
+}
+export const OrderSchema = SchemaFactory.createForClass(Order);
+// OrderSchema.index({ customerId: 1 }, { unique: true });
+
+/* SELLER ORDERS SCHEMA */
+@Schema({ timestamps: true })
+export class SellerOrder {
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order' })
+  orderId: Order;
+
+  @Prop({
+    type: [
+      {
+        name: { type: String },
+        qty: { type: Number, default: 1, required: true },
+        price: { type: Number, required: true },
+        tax: { type: Number, default: 0.0 },
+        subTotal: { type: Number, required: true },
+        productId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Product',
+          required: true,
+        },
+      },
+    ],
+  })
+  orderItems: OrderItem[];
+
+  @Prop({ type: Number, default: 0.0 })
+  totalPrice: number;
+
+  @Prop({
+    type: String,
+    enum: OrderStatus,
+    default: OrderStatus.ORDER_PENDING,
+  })
+  orderStatus: OrderStatus;
+
+  @Prop({
+    type: {
+      trackingNumber: Number,
+      shippingCarrier: {
+        type: String,
+        enum: ShippingCarrier,
+      },
+      shippedAt: Date,
+    },
+  })
+  trackingInfo: ITrackingInfo;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Merchant',
-    required: true,
     index: true,
+    required: true,
   })
-  merchantId: Merchant;
+  merchantId: string;
 }
-export const OrderSchema = SchemaFactory.createForClass(Order);
-OrderSchema.index({ customerId: 1, merchantId: 1 }, { unique: true });
+export const SellerOrderSchema = SchemaFactory.createForClass(SellerOrder);
+SellerOrderSchema.index({ orderId: 1 }, { unique: true });

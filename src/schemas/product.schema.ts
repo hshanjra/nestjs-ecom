@@ -42,6 +42,7 @@ export class Product {
       length: Number,
       width: Number,
       height: Number,
+      weight: Number,
     },
   })
   productDimensions: IProductDimensions; // values can be entered in milimeters
@@ -147,9 +148,10 @@ ProductSchema.pre('save', async function (next) {
 });
 
 ProductSchema.index({ productSlug: 1 }, { unique: true });
-ProductSchema.set('toJSON', {
-  transform(doc, ret, options) {
-    delete ret.merchantId;
-    delete ret.isActive;
-  },
-});
+
+/* METHODS */
+// ProductSchema.methods.OmitSensitive<Product> = async function (query: any) {
+//   let q = query;
+//   q.select = '-merchantId -updatedAt -isActive -__v';
+//   return await this.find(q);
+// };

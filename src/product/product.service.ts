@@ -137,9 +137,11 @@ export class ProductService {
   async findAll() {
     //TODO: add pagination and offset
     const allProducts = await this.productModel
-      .find({ isActive: true })
+      .find({
+        isActive: true,
+      })
       .populate('productCategory', 'categoryName categorySlug')
-      .select('-merchantId -updatedAt -compatibilityWith -isActive -__v')
+      // .select('-merchantId -updatedAt -isActive -__v')
       .exec();
     if (!allProducts) throw new NotFoundException('No products found.');
     return allProducts;
