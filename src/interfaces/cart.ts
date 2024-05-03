@@ -1,8 +1,14 @@
-import { Product } from 'src/schemas/product.schema';
-
 /* Cart Blueprint */
 interface cartItems {
-  product: Product;
+  product: {
+    _id?: string;
+    productTitle: string;
+    productSlug: string;
+    productBrand: string;
+    partNumber: string;
+    sku: string;
+    salePrice: number;
+  };
   qty: number;
   shippingPrice: number;
 }

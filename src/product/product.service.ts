@@ -204,13 +204,20 @@ export class ProductService {
 
   /* SHARED */
 
-  async updateProductStock(id: string, newStk: number): Promise<boolean> {
-    const updateStock = await this.productModel.findByIdAndUpdate(id, {
-      productStock: newStk,
-    });
-    if (updateStock) {
-      return true;
+  async updateProductStock(id: string, orderedQty: number): Promise<boolean> {
+    // Find the product by productId
+    const product = await this.productModel.findById(id);
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${id} not found.`);
     }
-    return false;
+
+    // Decrease the stock by ordered quantity
+    product.productStock -= orderedQty;
+
+    // Save the updated product
+    await product.save();
+
+    return true;
   }
 }

@@ -27,11 +27,11 @@ export class OrderService {
   async create(dto: CreateOrderDto, session: any) {
     if (!session.cart || !session.cart.items)
       throw new BadRequestException('There is nothing in the cart.');
-    const cartItems: ICart = session.cart.items;
+    const cart: ICart = session.cart;
     const orderItems: OrderItem[] = [];
 
-    for (const itemId in cartItems) {
-      const cartItem = cartItems[itemId];
+    for (const itemId in cart.items) {
+      const cartItem = cart.items[itemId];
 
       // Retrieve the current product from the database to get the latest stock
       const product = await this.productService.findActiveProductById(
@@ -47,7 +47,7 @@ export class OrderService {
       // Check if the requested quantity exceeds available stock
       if (cartItem.qty > product.productStock) {
         throw new BadRequestException(
-          `Not enough stock available for item ${product.productTitle}`,
+          `Not enough stock available for the product '${product.productTitle}'`,
         );
       }
 
@@ -74,25 +74,24 @@ export class OrderService {
       shippingAddress: dto.shippingAddress,
       paymentMethod: dto.paymentMethod,
       orderItems: orderItems,
-      taxPrice: cartItems.tax,
-      shippingPrice: cartItems.shippingPrice,
-      totalQty: cartItems.totalQty,
-      totalPrice: cartItems.totalAmount,
+      taxPrice: cart.tax,
+      shippingPrice: cart.shippingPrice,
+      totalQty: cart.totalQty,
+      totalPrice: cart.totalAmount,
     });
 
     if (order) {
-      //Update the product stock
-      for (const itemId in order.orderItems) {
-        const cartItem = order.orderItems[itemId];
-        const productId = cartItem.product._id;
-        const newStock = cartItem.qty - cartItem.qty;
+      // Update the product stock
+      for (const orderItem of orderItems) {
+        const productId = orderItem.product._id;
+        const orderedQty = orderItem.qty; // Get the ordered quantity
 
         // Update the stock of the product
-        await this.productService.updateProductStock(productId, newStock);
+        await this.productService.updateProductStock(productId, orderedQty);
       }
 
       // clear the cart
-      // session.cart = null;
+      session.cart = null;
     }
     return order;
   }

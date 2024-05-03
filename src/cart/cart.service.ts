@@ -22,6 +22,20 @@ export class CartService {
       throw new HttpException('Cart is Empty', 204);
     }
 
+    // Calculate tax and total amount
+    const tax = await this.calcTax(
+      session.cart.subTotal,
+      session.cart.stateCode,
+    );
+
+    // Update total amount
+    const total = session.cart.subTotal + tax + session.cart.shippingPrice;
+
+    // Update cart with tax and total amount
+
+    session.cart.tax = tax;
+    session.cart.totalAmount = total;
+
     return session.cart;
   }
 
@@ -158,7 +172,7 @@ export class CartService {
   ): Promise<number> {
     // Perform a case-insensitive search for the tax rate by state code
     const taxData = await this.taxRateModel.findOne({
-      stateCode: new RegExp(stateCode, 'i'),
+      stateCode: stateCode,
     });
 
     if (!taxData) return 0;
