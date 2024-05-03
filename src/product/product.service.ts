@@ -23,6 +23,14 @@ export class ProductService {
     @InjectModel(Product.name) private productModel: Model<Product>,
     private cloudinaryService: CloudinaryService,
   ) {}
+  /* FOR CUSTOMERS */
+
+  async findProductById(productId: string): Promise<Product> {
+    return await this.productModel
+      .findOne({ _id: productId, isActive: true })
+      .select('-merchantId -merchantId -isActive -isFeaturedProduct');
+  }
+
   /* FOR SELLERS */
   async create(
     createProductDto: CreateProductDto,
