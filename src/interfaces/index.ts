@@ -1,17 +1,23 @@
-import { Product } from 'src/schemas/product.schema';
-
 export interface OrderItem {
   qty: number;
   price: number;
+  shippingPrice: number;
   subTotal: number;
-  product: Product;
+  product: {
+    _id: string;
+    productTitle: string;
+    productSlug: string;
+    productBrand: string;
+    partNumber: string;
+    sku: string;
+  };
 }
 
 export interface IAddress {
   firstName: string;
   lastName: string;
-  phone: number;
   companyName?: string;
+  phone: number;
   streetAddress: string;
   city: string;
   state: string;

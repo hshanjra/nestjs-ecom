@@ -23,13 +23,6 @@ export class ProductService {
     @InjectModel(Product.name) private productModel: Model<Product>,
     private cloudinaryService: CloudinaryService,
   ) {}
-  /* FOR CUSTOMERS */
-
-  async findActiveProductById(productId: string): Promise<Product> {
-    return await this.productModel
-      .findOne({ _id: productId, isActive: true })
-      .select('-merchantId -merchantId -isActive -isFeaturedProduct');
-  }
 
   /* FOR SELLERS */
   async create(
@@ -142,6 +135,13 @@ export class ProductService {
   }
 
   /* FOR CUSTOMERS */
+
+  async findActiveProductById(productId: string): Promise<Product> {
+    return await this.productModel
+      .findOne({ _id: productId, isActive: true })
+      .select('-merchantId -isActive -isFeaturedProduct');
+  }
+
   async findAll() {
     //TODO: add pagination and offset
     const allProducts = await this.productModel
@@ -200,5 +200,17 @@ export class ProductService {
     if (!compatibleParts.length)
       throw new NotFoundException('No compatible parts found.');
     return compatibleParts;
+  }
+
+  /* SHARED */
+
+  async updateProductStock(id: string, newStk: number): Promise<boolean> {
+    const updateStock = await this.productModel.findByIdAndUpdate(id, {
+      productStock: newStk,
+    });
+    if (updateStock) {
+      return true;
+    }
+    return false;
   }
 }

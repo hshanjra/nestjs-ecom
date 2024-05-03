@@ -19,3 +19,8 @@ export enum paymentResponse {
   PAYMENT_SUCCESS = 'PAYMENT_SUCCESS',
   PAYMENT_FAILED = 'PAYMENT_FAILED',
 }
+
+export enum PaymentMethod {
+  CARD = 'CARD',
+  PAYPAL = 'PAYPAL',
+}

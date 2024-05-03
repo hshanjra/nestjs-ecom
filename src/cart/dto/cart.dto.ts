@@ -5,6 +5,7 @@ import {
   IsNumberString,
   IsOptional,
   IsString,
+  IsUppercase,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -30,5 +31,6 @@ export class CartDto {
   @MaxLength(2)
   @MinLength(2)
   @IsNotEmpty()
+  @IsUppercase()
   stateCode: string;
 }

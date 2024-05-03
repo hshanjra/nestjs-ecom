@@ -128,7 +128,7 @@ export class Product {
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
 ProductSchema.pre('save', async function (next) {
-  if (!this.isModified('productSlug')) return next();
+  if (!this.isModified('productTitle')) return next();
 
   const slugBase = slugify(this.productTitle, { lower: true });
   let slug = slugBase;

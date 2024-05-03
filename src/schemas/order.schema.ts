@@ -11,8 +11,8 @@ import { OrderStatus, paymentResponse, ShippingCarrier } from 'src/order/enums';
 
 @Schema({ timestamps: true })
 export class Order {
-  @Prop({ _id: Number })
-  _id: number;
+  // @Prop({ _id: Number })
+  // _id: number;
 
   // customer id could be blank if user is not logged in i.e. guest checkout
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
@@ -22,16 +22,15 @@ export class Order {
     required: true,
     type: [
       {
+        _id: false,
         qty: { type: Number, default: 1, required: true },
         price: { type: Number, required: true },
         shippingPrice: Number,
         subTotal: { type: Number, required: true },
         product: {
-          _id: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Product',
-            required: true,
-          },
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Product',
+          required: true,
           productTitle: String,
           productSlug: String,
           productBrand: String,
@@ -39,6 +38,7 @@ export class Order {
           sku: String,
         },
       },
+      ,
     ],
   })
   orderItems: OrderItem[];
@@ -46,33 +46,30 @@ export class Order {
   @Prop({
     required: true,
     type: {
-      billingAddress: {
-        firstName: String,
-        lastName: String,
-        companyName: String,
-        streetAddress: String,
-        city: String,
-        state: String,
-        zipCode: String,
-        country: String,
-      },
+      firstName: String,
+      lastName: String,
+      companyName: String,
+      phone: String,
+      streetAddress: String,
+      city: String,
+      state: String,
+      zipCode: String,
+      country: String,
     },
   })
   billingAddress: IAddress;
 
   @Prop({
-    required: true,
     type: {
-      shippingAddress: {
-        firstName: String,
-        lastName: String,
-        phone: Number,
-        streetAddress: String,
-        city: String,
-        state: String,
-        zipCode: String,
-        country: String,
-      },
+      firstName: String,
+      lastName: String,
+      companyName: String,
+      phone: String,
+      streetAddress: String,
+      city: String,
+      state: String,
+      zipCode: String,
+      country: String,
     },
   })
   shippingAddress: IAddress;
@@ -99,10 +96,10 @@ export class Order {
   shippingPrice: number;
 
   @Prop({ type: Number, required: true, default: 0.0 })
-  itemsPrice: number;
+  totalPrice: number;
 
   @Prop({ type: Number, required: true, default: 0.0 })
-  totalPrice: number;
+  totalQty: number;
 
   @Prop({
     type: String,
@@ -111,7 +108,7 @@ export class Order {
   })
   orderStatus: OrderStatus;
 
-  @Prop({ type: Number, default: null })
+  @Prop({ type: String, default: null })
   customerIP: string;
 
   @Prop({ type: String })
