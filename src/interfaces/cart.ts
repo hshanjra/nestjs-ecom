@@ -12,4 +12,5 @@ export interface ICart {
   subTotal: number;
   tax: number;
   totalAmount: number;
+  stateCode: string;
 }

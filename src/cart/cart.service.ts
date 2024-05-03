@@ -32,9 +32,11 @@ export class CartService {
       subTotal: 0,
       tax: 0,
       totalAmount: 0,
+      stateCode: '',
     };
     const itemId = cartDto.id;
     const itemQty = Number(cartDto.qty) || 1;
+    const stateCode = cartDto.stateCode || 'FL';
 
     // check if product exists in the database
     const existingProduct = await this.productService.findProductById(itemId);
@@ -77,10 +79,11 @@ export class CartService {
     cart.subTotal += existingProduct.salePrice * qtyDiff;
 
     // Calculate tax and total amount
-    const tax = await this.calcTax(cart.subTotal, 'FL');
+    const tax = await this.calcTax(cart.subTotal, stateCode);
     const total = cart.subTotal + tax;
 
     // Update cart with tax and total amount
+    cart.stateCode = stateCode;
     cart.tax = tax;
     cart.totalAmount = total;
 

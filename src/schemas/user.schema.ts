@@ -27,7 +27,7 @@ export class User {
   // @Prop({ type: String, required: true, unique: true, lowercase: true })
   // username: string;
 
-  @Prop({ required: true, minlength: 8, trim: true })
+  @Prop({ required: true, min: 8, trim: true })
   password: string;
 
   @Prop({

@@ -3,7 +3,10 @@ import {
   IsMongoId,
   IsNotEmpty,
   IsNumberString,
+  IsOptional,
   IsString,
+  MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class CartDto {
@@ -22,4 +25,10 @@ export class CartDto {
     { message: 'Please enter a valid quantity.' },
   )
   qty: number;
+
+  @IsOptional()
+  @MaxLength(2)
+  @MinLength(2)
+  @IsNotEmpty()
+  stateCode: string;
 }
