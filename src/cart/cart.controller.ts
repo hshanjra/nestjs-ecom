@@ -24,8 +24,8 @@ export class CartController {
     return this.cartService.getCartItems(session);
   }
 
-  @Delete()
-  remove(@Session() session: Record<string, any>) {
-    return this.cartService.remove(session);
+  @Delete(':id')
+  remove(@Param('id') id: string, @Session() session: Record<string, any>) {
+    return this.cartService.removeItem(id, session);
   }
 }

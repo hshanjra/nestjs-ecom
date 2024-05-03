@@ -68,6 +68,11 @@ export class CreateProductDto {
   @IsNotEmpty()
   salePrice: number;
 
+  @IsNumberString()
+  @IsNotEmpty()
+  @IsOptional()
+  shippingPrice: number;
+
   @IsOptional()
   @IsNotEmpty()
   images: Express.Multer.File[];

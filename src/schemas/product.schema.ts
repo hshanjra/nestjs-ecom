@@ -69,6 +69,9 @@ export class Product {
   @Prop({ type: Number, required: true, default: 0.0 })
   salePrice: number;
 
+  @Prop({ type: Number, default: 0.0 })
+  shippingPrice: number;
+
   @Prop({
     required: true,
     type: [
@@ -148,10 +151,3 @@ ProductSchema.pre('save', async function (next) {
 });
 
 ProductSchema.index({ productSlug: 1 }, { unique: true });
-
-/* METHODS */
-// ProductSchema.methods.OmitSensitive<Product> = async function (query: any) {
-//   let q = query;
-//   q.select = '-merchantId -updatedAt -isActive -__v';
-//   return await this.find(q);
-// };

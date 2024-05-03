@@ -25,7 +25,7 @@ export class ProductService {
   ) {}
   /* FOR CUSTOMERS */
 
-  async findProductById(productId: string): Promise<Product> {
+  async findActiveProductById(productId: string): Promise<Product> {
     return await this.productModel
       .findOne({ _id: productId, isActive: true })
       .select('-merchantId -merchantId -isActive -isFeaturedProduct');

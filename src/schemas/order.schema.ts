@@ -22,15 +22,21 @@ export class Order {
     required: true,
     type: [
       {
-        name: { type: String },
         qty: { type: Number, default: 1, required: true },
         price: { type: Number, required: true },
-        tax: { type: Number, default: 0.0 },
+        shippingPrice: Number,
         subTotal: { type: Number, required: true },
-        productId: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Product',
-          required: true,
+        product: {
+          _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+            required: true,
+          },
+          productTitle: String,
+          productSlug: String,
+          productBrand: String,
+          partNumber: String,
+          sku: String,
         },
       },
     ],
@@ -105,6 +111,9 @@ export class Order {
   })
   orderStatus: OrderStatus;
 
+  @Prop({ type: Number, default: null })
+  customerIP: string;
+
   @Prop({ type: String })
   orderNotes: string;
 }
@@ -123,7 +132,6 @@ export class SellerOrder {
         name: { type: String },
         qty: { type: Number, default: 1, required: true },
         price: { type: Number, required: true },
-        tax: { type: Number, default: 0.0 },
         subTotal: { type: Number, required: true },
         productId: {
           type: mongoose.Schema.Types.ObjectId,

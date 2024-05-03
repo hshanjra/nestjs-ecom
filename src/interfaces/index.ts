@@ -1,11 +1,10 @@
 import { Product } from 'src/schemas/product.schema';
 
 export interface OrderItem {
-  name: string;
   qty: number;
   price: number;
-  tax: number;
-  productId: Product;
+  subTotal: number;
+  product: Product;
 }
 
 export interface IAddress {

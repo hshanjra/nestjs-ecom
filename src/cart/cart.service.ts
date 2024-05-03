@@ -31,6 +31,7 @@ export class CartService {
       totalQty: 0,
       subTotal: 0,
       tax: 0,
+      shippingPrice: 0,
       totalAmount: 0,
       stateCode: '',
     };
@@ -39,7 +40,8 @@ export class CartService {
     const stateCode = cartDto.stateCode || 'FL';
 
     // check if product exists in the database
-    const existingProduct = await this.productService.findProductById(itemId);
+    const existingProduct =
+      await this.productService.findActiveProductById(itemId);
 
     if (!existingProduct) throw new NotFoundException('Product not found.');
 
@@ -65,24 +67,36 @@ export class CartService {
       ? existingProduct.productStock
       : itemQty;
 
+    // Calculate shipping price for the current item
+    const itemShippingPrice = existingProduct.shippingPrice || 0;
+
     // Update cart item
     cart.items[itemId] = {
       product: existingProduct,
       qty: adjustedQty,
+      shippingPrice: itemShippingPrice,
     };
 
     // Update total quantity
     cart.totalQty += adjustedQty - prevQty;
 
-    // Update subtotal
-    const qtyDiff = adjustedQty - prevQty;
-    cart.subTotal += existingProduct.salePrice * qtyDiff;
+    // Calculate subtotal
+    let subtotal = 0;
+    for (const itemId in cart.items) {
+      const item = cart.items[itemId];
+      subtotal += item.product.salePrice * item.qty;
+    }
 
     // Calculate tax and total amount
     const tax = await this.calcTax(cart.subTotal, stateCode);
-    const total = cart.subTotal + tax;
+
+    // Update shipping price
+    cart.shippingPrice = Number(existingProduct.shippingPrice);
+    // Update total amount
+    const total = subtotal + tax + cart.shippingPrice;
 
     // Update cart with tax and total amount
+    cart.subTotal = subtotal;
     cart.stateCode = stateCode;
     cart.tax = tax;
     cart.totalAmount = total;
@@ -90,8 +104,49 @@ export class CartService {
     return (session.cart = cart);
   }
 
-  async remove(session: Record<string, any>) {
-    return await session.destroy();
+  async removeItem(itemId: string, session: Record<string, any>) {
+    if (!session.cart || !session.cart.items) {
+      throw new HttpException('Cart is Empty', 204);
+    }
+
+    const cart: ICart = session.cart;
+    const stateCode = session.cart.stateCode;
+
+    // Check if the item exists in the cart
+    if (!cart.items[itemId]) {
+      throw new NotFoundException('Item does not exist in the cart.');
+    }
+
+    // Remove the item from the cart
+    delete cart.items[itemId];
+
+    // Recalculate total quantity, subtotal, tax, shipping price, and total amount
+    let totalQty = 0;
+    let subTotal = 0;
+    let totalShippingPrice = 0;
+
+    for (const key in cart.items) {
+      const item = cart.items[key];
+      totalQty += item.qty;
+      subTotal += item.product.salePrice * item.qty;
+      totalShippingPrice += item.shippingPrice * item.qty;
+    }
+
+    const tax = await this.calcTax(subTotal, stateCode);
+    const totalAmount = subTotal + tax + totalShippingPrice;
+
+    // Update cart properties
+    cart.totalQty = totalQty;
+    cart.subTotal = subTotal;
+    cart.tax = tax;
+    cart.shippingPrice = totalShippingPrice;
+    cart.totalAmount = totalAmount;
+
+    // Update session with the modified cart
+    session.cart = cart;
+
+    // Return the updated cart
+    return cart;
   }
 
   /* PRIVATE METHODS */
@@ -101,8 +156,10 @@ export class CartService {
     orderTotal: number,
     stateCode: string,
   ): Promise<number> {
-    // Get the tax rate by state code
-    const taxData = await this.taxRateModel.findOne({ stateCode });
+    // Perform a case-insensitive search for the tax rate by state code
+    const taxData = await this.taxRateModel.findOne({
+      stateCode: new RegExp(stateCode, 'i'),
+    });
 
     if (!taxData) return 0;
     // Calculate taxable amount (order total before tax)
