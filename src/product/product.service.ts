@@ -203,8 +203,8 @@ export class ProductService {
   }
 
   /* SHARED */
-
-  async updateProductStock(id: string, orderedQty: number): Promise<boolean> {
+  // Decrease the stock by ordered quantity
+  async decreaseProductStock(id: string, orderedQty: number): Promise<boolean> {
     // Find the product by productId
     const product = await this.productModel.findById(id);
 

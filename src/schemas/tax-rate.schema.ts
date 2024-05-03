@@ -36,7 +36,7 @@ export class TaxRate {
   })
   city: string;
 
-  @Prop({ type: Number, required: true, default: 0.0 })
+  @Prop({ type: Number, required: true, default: 0.0, index: true })
   taxRate: number;
 
   @Prop({ type: String })

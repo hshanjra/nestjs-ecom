@@ -115,7 +115,7 @@ export class CartService {
     cart.tax = tax;
     cart.totalAmount = total;
 
-    return (session.cart = cart);
+    return cart;
   }
 
   async removeItem(itemId: string, session: Record<string, any>) {
@@ -166,26 +166,27 @@ export class CartService {
   /* PRIVATE METHODS */
 
   // Function to calculate tax for an order
-  private async calcTax(
-    orderTotal: number,
-    stateCode: string,
-  ): Promise<number> {
-    // Perform a case-insensitive search for the tax rate by state code
-    const taxData = await this.taxRateModel.findOne({
-      stateCode: stateCode,
-    });
+  async calcTax(orderTotal: number, stateCode: string): Promise<number> {
+    try {
+      // Perform a case-insensitive search for the tax rate by state code
+      const taxData = await this.taxRateModel.findOne({
+        stateCode: new RegExp(stateCode, 'i'),
+      });
 
-    if (!taxData) return 0;
-    // Calculate taxable amount (order total before tax)
-    const taxableAmount = orderTotal;
+      // if (!taxData) return 0;
+      // Calculate taxable amount (order total before tax)
+      const taxableAmount = orderTotal;
 
-    // Calculate tax amount
-    const taxAmount = (taxableAmount * taxData.taxRate) / 100;
+      // Calculate tax amount
+      const taxAmount = (taxableAmount * taxData.taxRate) / 100;
 
-    // Round tax amount to 2 decimal places (optional)
-    const roundedTaxAmount = Math.round(taxAmount * 100) / 100;
+      // Round tax amount to 2 decimal places (optional)
+      const roundedTaxAmount = Math.round(taxAmount * 100) / 100;
 
-    return roundedTaxAmount;
+      return roundedTaxAmount;
+    } catch (error) {
+      throw new HttpException('Unable to calculate tax amount.', 502);
+    }
   }
 
   // Function to check whether entered qty is greater than qty available.
