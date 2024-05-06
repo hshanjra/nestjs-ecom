@@ -12,6 +12,7 @@ import { TaxRate, TaxRateSchema } from 'src/schemas/tax-rate.schema';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { Product, ProductSchema } from 'src/schemas/product.schema';
 import { ProductService } from '../product/product.service';
+import { StripeService } from 'src/utility/stripe/stripe.service';
 
 @Module({
   imports: [
@@ -35,6 +36,6 @@ import { ProductService } from '../product/product.service';
     ]),
   ],
   controllers: [OrderController],
-  providers: [OrderService, ProductService, CloudinaryService],
+  providers: [OrderService, ProductService, CloudinaryService, StripeService],
 })
 export class OrderModule {}

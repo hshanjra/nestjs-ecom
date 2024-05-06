@@ -81,7 +81,7 @@ export class Order {
 
   @Prop({
     type: {
-      txnId: String,
+      txnId: { type: String, default: null },
       status: {
         type: String,
         enum: paymentResponse,

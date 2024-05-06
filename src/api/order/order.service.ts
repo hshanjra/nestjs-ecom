@@ -7,7 +7,7 @@ import {
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { Order, SellerOrder } from 'src/schemas/order.schema';
 import { OrderStatus } from './enums';
 import { cartItem, ICart } from 'src/interfaces/cart';
@@ -15,6 +15,7 @@ import { TaxRate } from 'src/schemas/tax-rate.schema';
 import { OrderItem } from 'src/interfaces';
 import { Product } from 'src/schemas/product.schema';
 import { ProductService } from '../product/product.service';
+import { StripeService } from 'src/utility/stripe/stripe.service';
 
 @Injectable()
 export class OrderService {
@@ -23,6 +24,7 @@ export class OrderService {
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(SellerOrder.name) private sellerOrderModel: Model<SellerOrder>,
     private productService: ProductService,
+    private stripeService: StripeService,
   ) {}
 
   /* CUSTOMER */
@@ -44,14 +46,34 @@ export class OrderService {
 
       await mongooseSession.commitTransaction();
     } catch (error) {
+      // TODO: move this into webhook
+      // If payment fails, update order status to ORDER_CANCELLED and save payment details
+      // await this.updateOrderStatus(
+      //   order._id,
+      //   OrderStatus.ORDER_CANCELLED,
+      //   mongooseSession,
+      // );
       await mongooseSession.abortTransaction();
       throw error;
     }
 
-    await this.splitOrder(order._id);
+    let _pi;
+    // check payment methods and generate tokens
+    switch (dto.paymentMethod) {
+      case 'CARD':
+        // Write code to charge stripe amount
+        _pi = await this.stripeService.chargeCard(order.totalPrice);
+        break;
+
+      case 'PAYPAL':
+        // Write code to charge paypal amount
+        break;
+    }
+
+    // await this.splitOrder(order._id); // TODO: move this into a separate function where payment status is successful then split order
     this.clearCart(session);
 
-    return order;
+    return _pi;
   }
 
   findAll() {
@@ -186,6 +208,38 @@ export class OrderService {
   // Method to clear the cart after the order is created
   private clearCart(session: any): void {
     session.cart = null;
+  }
+
+  // Method to update the order status
+  private async updateOrderStatus(
+    orderId: string,
+    status: OrderStatus,
+    session: ClientSession,
+  ): Promise<void> {
+    await this.orderModel.findByIdAndUpdate(
+      orderId,
+      { orderStatus: status },
+      { session },
+    );
+  }
+
+  // Method to store payment information
+  private async savePaymentResponse(
+    orderId: string,
+    txnId: string,
+    status: string,
+    session: ClientSession,
+  ): Promise<void> {
+    await this.orderModel.findByIdAndUpdate(
+      orderId,
+      {
+        paymentResponse: {
+          txnId,
+          status,
+        },
+      },
+      { session },
+    );
   }
 
   /* SELLER ORDER SERVICE */
