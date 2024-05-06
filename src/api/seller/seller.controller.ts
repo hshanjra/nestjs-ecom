@@ -13,14 +13,15 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { CancelOrderDto } from 'src/order/dto/cancel-order.dto';
-import { ProcessOrderDto } from 'src/order/dto/process-order.dto';
-import { CreateProductDto } from 'src/product/dto/create-product.dto';
-import { UpdateProductDto } from 'src/product/dto/update-product.dto';
-import { ProductService } from 'src/product/product.service';
+
 import { AddBankAccountDto } from './dto/add-bank-account.dto';
 import { AddPayoutMethodDto } from './dto/add-payout.dto';
 import { Request } from 'express';
+import { CreateProductDto } from '../product/dto/create-product.dto';
+import { ProductService } from '../product/product.service';
+import { UpdateProductDto } from '../product/dto/update-product.dto';
+import { CancelOrderDto } from '../order/dto/cancel-order.dto';
+import { ProcessOrderDto } from '../order/dto/process-order.dto';
 
 @Controller('seller') //TODO: implement authorization for [seller] only.
 export class SellerController {

@@ -13,8 +13,8 @@ import { OrderStatus } from './enums';
 import { cartItem, ICart } from 'src/interfaces/cart';
 import { TaxRate } from 'src/schemas/tax-rate.schema';
 import { OrderItem } from 'src/interfaces';
-import { ProductService } from 'src/product/product.service';
 import { Product } from 'src/schemas/product.schema';
+import { ProductService } from '../product/product.service';
 
 @Injectable()
 export class OrderService {

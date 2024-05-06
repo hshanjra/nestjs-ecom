@@ -7,7 +7,11 @@ import {
   ITrackingInfo,
   OrderItem,
 } from 'src/interfaces';
-import { OrderStatus, paymentResponse, ShippingCarrier } from 'src/order/enums';
+import {
+  OrderStatus,
+  paymentResponse,
+  ShippingCarrier,
+} from 'src/api/order/enums';
 
 @Schema({ timestamps: true })
 export class Order {

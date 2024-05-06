@@ -4,8 +4,8 @@ import { Model } from 'mongoose';
 import { User } from 'src/schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Role } from 'src/auth/enums';
-import { SellerService } from 'src/seller/seller.service';
+import { SellerService } from '../seller/seller.service';
+import { Role } from '../auth/enums';
 
 @Injectable()
 export class UsersService {

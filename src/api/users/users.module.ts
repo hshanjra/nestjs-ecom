@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
 import { UserController } from './users.controller';
 import { Merchant, MerchantSchema } from 'src/schemas/merchant.schema';
-import { SellerService } from 'src/seller/seller.service';
+import { SellerService } from '../seller/seller.service';
 
 @Module({
   imports: [

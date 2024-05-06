@@ -1,18 +1,18 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { ConfigModule } from '@nestjs/config';
-import { ProductModule } from './product/product.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import { OrderModule } from './order/order.module';
 import { CloudinaryModule } from './utility/cloudinary/cloudinary.module';
-import { SellerModule } from './seller/seller.module';
-import { StripeModule } from './utility/stripe/stripe.module';
-import { CategoryModule } from './category/category.module';
-import { AdminsModule } from './admins/admins.module';
-import { CartModule } from './cart/cart.module';
-import { CouponsModule } from './coupons/coupons.module';
 import { MongoSessionStore } from './utility/store/mongo-session.store';
+import { ConfigModule } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AuthModule } from './api/auth/auth.module';
+import { UsersModule } from './api/users/users.module';
+import { ProductModule } from './api/product/product.module';
+import { OrderModule } from './api/order/order.module';
+import { SellerModule } from './api/seller/seller.module';
+import { StripeModule } from './utility/stripe/stripe.module';
+import { CategoryModule } from './api/category/category.module';
+import { AdminsModule } from './api/admins/admins.module';
+import { CartModule } from './api/cart/cart.module';
+import { CouponsModule } from './api/coupons/coupons.module';
 
 @Module({
   imports: [

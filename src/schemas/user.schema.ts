@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Merchant } from './merchant.schema';
 import * as bcrypt from 'bcrypt';
-import { Role } from 'src/auth/enums';
+import { Role } from '../api/auth/enums';
 
 enum accountStatus {
   ACTIVE = 'ACTIVE',

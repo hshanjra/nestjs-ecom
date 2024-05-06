@@ -9,9 +9,9 @@ import {
   SellerOrderSchema,
 } from 'src/schemas/order.schema';
 import { TaxRate, TaxRateSchema } from 'src/schemas/tax-rate.schema';
-import { ProductService } from 'src/product/product.service';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { Product, ProductSchema } from 'src/schemas/product.schema';
+import { ProductService } from '../product/product.service';
 
 @Module({
   imports: [

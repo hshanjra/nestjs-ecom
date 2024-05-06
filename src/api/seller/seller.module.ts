@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { SellerController } from './seller.controller';
-import { ProductService } from 'src/product/product.service';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { MulterModule } from '@nestjs/platform-express';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Product, ProductSchema } from 'src/schemas/product.schema';
+import { ProductService } from '../product/product.service';
 
 @Module({
   imports: [

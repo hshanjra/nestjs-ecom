@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Roles } from '../enums/role.enum';
 import * as bcrypt from 'bcrypt';
+import { AdminRoles } from '../enums/role.enum';
 
 @Schema({ timestamps: true })
 export class Admin {
@@ -13,8 +13,8 @@ export class Admin {
   @Prop({ type: Boolean, default: true })
   isActive: boolean;
 
-  @Prop({ type: Array, enum: Roles, default: Roles.ADMIN })
-  role: Array<Roles>;
+  @Prop({ type: Array, enum: AdminRoles, default: AdminRoles.ADMIN })
+  role: Array<AdminRoles>;
 }
 
 export const AdminSchema = SchemaFactory.createForClass(Admin);
