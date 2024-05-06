@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import slugify from 'slugify';
-import { Merchant } from './merchant.schema';
 import { Category } from './category.schema';
 import {
   ICompatibility,
@@ -11,6 +10,7 @@ import {
 
 @Schema({ timestamps: true })
 export class Product {
+  _id: string;
   @Prop({ type: String, required: true, index: true })
   productTitle: string;
 
@@ -123,7 +123,7 @@ export class Product {
     required: true,
     index: true,
   })
-  merchantId: Merchant;
+  merchantId: mongoose.Types.ObjectId;
 }
 export const ProductSchema = SchemaFactory.createForClass(Product);
 

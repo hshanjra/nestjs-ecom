@@ -11,9 +11,7 @@ import { OrderStatus, paymentResponse, ShippingCarrier } from 'src/order/enums';
 
 @Schema({ timestamps: true })
 export class Order {
-  // @Prop({ _id: Number })
-  // _id: number;
-
+  _id: string;
   // customer id could be blank if user is not logged in i.e. guest checkout
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   customerId: User;
@@ -146,7 +144,7 @@ export class SellerOrder {
   @Prop({
     type: String,
     enum: OrderStatus,
-    default: OrderStatus.ORDER_PENDING,
+    default: OrderStatus.ORDER_PLACED,
   })
   orderStatus: OrderStatus;
 

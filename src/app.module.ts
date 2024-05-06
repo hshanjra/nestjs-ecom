@@ -19,7 +19,10 @@ import { MongoSessionStore } from './utility/store/mongo-session.store';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRoot(process.env.DATABASE_URI, {}),
+    MongooseModule.forRoot(
+      process.env.DATABASE_URI + '/' + process.env.DB_NAME,
+      {},
+    ),
     AuthModule,
     UsersModule,
     ProductModule,

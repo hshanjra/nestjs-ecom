@@ -1,5 +1,5 @@
 /* Cart Blueprint */
-interface cartItems {
+export interface cartItem {
   product: {
     _id?: string;
     productTitle: string;
@@ -14,7 +14,7 @@ interface cartItems {
 }
 
 export interface ICart {
-  items: Record<string, cartItems>;
+  items: Record<string, cartItem>;
   totalQty: number;
   subTotal: number;
   tax: number;

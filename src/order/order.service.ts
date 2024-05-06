@@ -10,10 +10,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Order, SellerOrder } from 'src/schemas/order.schema';
 import { OrderStatus } from './enums';
-import { ICart } from 'src/interfaces/cart';
+import { cartItem, ICart } from 'src/interfaces/cart';
 import { TaxRate } from 'src/schemas/tax-rate.schema';
 import { OrderItem } from 'src/interfaces';
 import { ProductService } from 'src/product/product.service';
+import { Product } from 'src/schemas/product.schema';
 
 @Injectable()
 export class OrderService {
@@ -25,77 +26,31 @@ export class OrderService {
   ) {}
 
   /* CUSTOMER */
-  async create(dto: CreateOrderDto, session: any) {
-    if (!session.cart || !session.cart.items)
-      throw new BadRequestException('There is nothing in the cart.');
-    const cart: ICart = session.cart;
-    const orderItems: OrderItem[] = [];
+  async create(dto: CreateOrderDto, session: any): Promise<Order> {
+    let order: Order;
 
-    for (const itemId in cart.items) {
-      const cartItem = cart.items[itemId];
+    // Start a session on the Mongoose connection
+    const mongooseSession = await this.orderModel.startSession();
 
-      // Retrieve the current product from the database to get the latest stock
-      const product = await this.productService.findActiveProductById(
-        cartItem.product._id,
-      );
+    mongooseSession.startTransaction();
+    try {
+      this.validateCart(session);
 
-      if (!product) {
-        throw new NotFoundException(
-          `Product '${cartItem.product.productTitle}' not found.`,
-        );
-      }
+      const cart: ICart = session.cart;
+      const orderItems: OrderItem[] = await this.processCartItems(cart.items);
 
-      // Check if the requested quantity exceeds available stock
-      if (cartItem.qty > product.productStock) {
-        throw new BadRequestException(
-          `Not enough stock available for the product '${product.productTitle}'`,
-        );
-      }
+      order = await this.createOrderRecord(dto, cart, orderItems);
+      await this.updateProductStocks(orderItems);
 
-      const orderItem: OrderItem = {
-        qty: cartItem.qty,
-        price: cartItem.product.salePrice, // Assuming salePrice is the price of the product
-        shippingPrice: cartItem.shippingPrice,
-        subTotal: cartItem.qty * cartItem.product.salePrice,
-        product: {
-          _id: cartItem.product._id, // Assuming this is a string representing the ObjectId
-          productTitle: cartItem.product.productTitle,
-          productSlug: cartItem.product.productSlug,
-          productBrand: cartItem.product.productBrand,
-          partNumber: cartItem.product.partNumber,
-          sku: cartItem.product.sku,
-        },
-      };
-      orderItems.push(orderItem);
+      await mongooseSession.commitTransaction();
+    } catch (error) {
+      await mongooseSession.abortTransaction();
+      throw error;
     }
 
-    //create the order
-    const order = await this.orderModel.create({
-      billingAddress: dto.billingAddress,
-      shippingAddress: dto.shippingAddress,
-      paymentMethod: dto.paymentMethod,
-      orderItems: orderItems,
-      taxPrice: cart.tax,
-      shippingPrice: cart.shippingPrice,
-      totalQty: cart.totalQty,
-      totalPrice: cart.totalAmount,
-    });
+    await this.splitOrder(order._id);
+    this.clearCart(session);
 
-    if (order) {
-      // Update the product stock
-      for (const orderItem of orderItems) {
-        const productId = orderItem.product._id;
-        const orderedQty = orderItem.qty; // Get the ordered quantity
-
-        // Update the stock of the product
-        await this.productService.decreaseProductStock(productId, orderedQty);
-      }
-
-      // clear the cart
-      session.cart = null;
-    }
-
-    //TODO: return a stripe token.
     return order;
   }
 
@@ -144,60 +99,166 @@ export class OrderService {
     }
   }
 
-  /* SELLER*/
-
-  async splitOrder(orderId: string) {
-    const order = await this.orderModel.findOne({
-      _id: orderId,
-      orderStatus: {
-        $nin: [
-          OrderStatus.ORDER_COMPLETED,
-          OrderStatus.ORDER_FAILED,
-          OrderStatus.ORDER_PENDING,
-        ],
-      },
-    });
-
-    if (!order) {
-      console.log(
-        '\nOrder is already separated into sellers or order is completed.',
-      );
-      return;
+  // Method to validate the existence of items in the cart
+  private validateCart(session: any): void {
+    if (!session.cart || !session.cart.items) {
+      throw new BadRequestException('There is nothing in the cart.');
     }
-    // Group products by seller
-    const productsBySeller = this.groupProductsBySeller(order.orderItems);
+  }
 
-    // Create separate orders for each seller
-    for (const sellerId in productsBySeller) {
-      const products = productsBySeller[sellerId];
+  // Method to process each item in the cart and create order items
+  private async processCartItems(cartItems: {
+    [id: string]: cartItem;
+  }): Promise<OrderItem[]> {
+    const orderItems: OrderItem[] = [];
+
+    for (const itemId in cartItems) {
+      const cartItem = cartItems[itemId];
+      const product = await this.productService.findActiveProductById(
+        cartItem.product._id,
+      );
+
+      if (!product) {
+        throw new NotFoundException(
+          `Product '${cartItem.product.productTitle}' not found.`,
+        );
+      }
+
+      if (cartItem.qty > product.productStock) {
+        throw new BadRequestException(
+          `Not enough stock available for the product '${cartItem.product.productTitle}'`,
+        );
+      }
+
+      orderItems.push(this.createOrderItem(cartItem, product));
+    }
+
+    return orderItems;
+  }
+
+  // Method to create a single order item from a cart item
+  private createOrderItem(cartItem: cartItem, product: Product): OrderItem {
+    return {
+      qty: cartItem.qty,
+      price: product.salePrice, // Assuming salePrice is the price to be charged
+      shippingPrice: cartItem.shippingPrice,
+      subTotal: cartItem.qty * product.salePrice,
+      product: {
+        _id: product._id,
+        productTitle: product.productTitle,
+        productSlug: product.productSlug,
+        productBrand: product.productBrand,
+        partNumber: product.partNumber,
+        sku: product.sku,
+        merchantId: product.merchantId,
+      },
+    };
+  }
+
+  // Method to create the order record
+  private async createOrderRecord(
+    dto: CreateOrderDto,
+    cart: ICart,
+    orderItems: OrderItem[],
+  ): Promise<Order> {
+    return await this.orderModel.create({
+      billingAddress: dto.billingAddress,
+      shippingAddress: dto.shippingAddress,
+      paymentMethod: dto.paymentMethod,
+      orderItems: orderItems,
+      taxPrice: cart.tax,
+      shippingPrice: cart.shippingPrice,
+      totalQty: cart.totalQty,
+      totalPrice: cart.totalAmount,
+    });
+  }
+
+  // Method to update the stock of each product ordered
+  private async updateProductStocks(orderItems: OrderItem[]): Promise<void> {
+    for (const orderItem of orderItems) {
+      await this.productService.decreaseProductStock(
+        orderItem.product._id,
+        orderItem.qty,
+      );
+    }
+  }
+
+  // Method to clear the cart after the order is created
+  private clearCart(session: any): void {
+    session.cart = null;
+  }
+
+  /* SELLER ORDER SERVICE */
+
+  async splitOrder(orderId: string): Promise<boolean> {
+    const order = await this.orderModel
+      .findById(orderId)
+      .populate('orderItems.product')
+      .exec();
+
+    if (
+      !order ||
+      order.orderStatus === OrderStatus.ORDER_COMPLETED ||
+      order.orderStatus === OrderStatus.ORDER_FAILED
+    ) {
+      console.log(
+        'Order is already separated into sellers or order is completed.',
+      );
+      return false;
+    }
+
+    // Group order items by merchantId
+    const productsByMerchant = this.groupProductsByMerchant(order.orderItems);
+
+    // Create separate orders for each merchant
+    for (const merchantId in productsByMerchant) {
+      const products = productsByMerchant[merchantId];
       const totalPrice = this.calcTotalPrice(products);
+
+      // Populate orderItems array for the SellerOrder
+      const orderItems = products.map((product) => ({
+        productId: product.product._id, // Assuming productId is the _id of the product
+        qty: product.qty,
+        price: product.price,
+        subTotal: product.subTotal, // Populate subTotal from the original order item
+      }));
+
       const sellerOrderData = {
         orderId: order._id,
-        merchantId: sellerId,
-        orderItems: products,
+        merchantId,
+        orderItems,
         totalPrice,
       };
-      //Saving all the seller orders
+
+      // Save the seller order
       await this.sellerOrderModel.create(sellerOrderData);
     }
+
     return true;
   }
+
   /* This method takes an array of products and groups them by seller ID, returning an object where each key represents a seller ID and its corresponding value is an array of products associated with that seller. */
-  private groupProductsBySeller(products: any[]): {
-    [sellerId: string]: any[];
-  } {
-    const productsBySeller: { [sellerId: string]: any[] } = {};
-    products.forEach((product) => {
-      const sellerId = product.merchantId;
-      if (!productsBySeller[sellerId]) {
-        productsBySeller[sellerId] = [];
+  private groupProductsByMerchant(
+    orderItems: OrderItem[],
+  ): Record<string, OrderItem[]> {
+    const productsByMerchant: Record<string, OrderItem[]> = {};
+
+    for (const orderItem of orderItems) {
+      const merchantId = orderItem.product.merchantId.toHexString(); // Convert ObjectId to string
+      if (!productsByMerchant[merchantId]) {
+        productsByMerchant[merchantId] = [];
       }
-      productsBySeller[sellerId].push(product);
-    });
-    return productsBySeller;
+      productsByMerchant[merchantId].push(orderItem);
+    }
+
+    return productsByMerchant;
   }
 
-  private calcTotalPrice(products: any[]): number {
-    return products.reduce((total, product) => total + product.totalPrice, 0);
+  private calcTotalPrice(orderItems: OrderItem[]): number {
+    let totalPrice = 0;
+    for (const orderItem of orderItems) {
+      totalPrice += orderItem.subTotal;
+    }
+    return totalPrice;
   }
 }

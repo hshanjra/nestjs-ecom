@@ -192,9 +192,8 @@ export class CartService {
     }
   }
 
-  // Function to check whether entered qty is greater than qty available.
-
-  // true if qty is greater than available qty. false if qty is less than available qty.
+  /*   Function to check whether entered qty is greater than qty available.
+  true if qty is greater than available qty. false if qty is less than available qty. */
   private checkExessQty(enteredQty: number, availableQty: number): boolean {
     return enteredQty > availableQty;
   }

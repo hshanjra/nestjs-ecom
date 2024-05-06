@@ -10,6 +10,7 @@ export interface OrderItem {
     productBrand: string;
     partNumber: string;
     sku: string;
+    merchantId: any;
   };
 }
 
