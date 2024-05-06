@@ -22,19 +22,19 @@ export class CartService {
       throw new HttpException('Cart is Empty', 204);
     }
 
-    // Calculate tax and total amount
-    const tax = await this.calcTax(
-      session.cart.subTotal,
-      session.cart.stateCode,
-    );
+    // // Calculate tax and total amount
+    // const tax = await this.calcTax(
+    //   session.cart.subTotal,
+    //   session.cart.stateCode,
+    // );
 
-    // Update total amount
-    const total = session.cart.subTotal + tax + session.cart.shippingPrice;
+    // // Update total amount
+    // const total = session.cart.subTotal + tax + session.cart.shippingPrice;
 
-    // Update cart with tax and total amount
+    // // Update cart with tax and total amount
 
-    session.cart.tax = tax;
-    session.cart.totalAmount = total;
+    // session.cart.tax = tax;
+    // session.cart.totalAmount = total;
 
     return session.cart;
   }
@@ -102,11 +102,12 @@ export class CartService {
       subtotal += item.product.salePrice * item.qty;
     }
 
-    // Calculate tax and total amount
-    const tax = await this.calcTax(cart.subTotal, stateCode);
-
     // Update shipping price
     cart.shippingPrice = Number(existingProduct.shippingPrice);
+
+    // Calculate tax and total amount
+    const tax = await this.calcTax(subtotal, stateCode);
+
     // Update total amount
     const total = subtotal + tax + cart.shippingPrice;
 
@@ -168,25 +169,25 @@ export class CartService {
   /* PRIVATE METHODS */
 
   // Function to calculate tax for an order
-  async calcTax(orderTotal: number, stateCode: string): Promise<number> {
+  private async calcTax(subTotal: number, stateCode: string): Promise<number> {
     try {
       // Perform a case-insensitive search for the tax rate by state code
       const taxData = await this.taxRateModel.findOne({
-        stateCode: new RegExp(stateCode, 'i'),
+        stateCode: new RegExp(`^${stateCode}$`, 'i'), // Ensures exact match, case-insensitive
       });
 
-      // if (!taxData) return 0;
-      // Calculate taxable amount (order total before tax)
-      const taxableAmount = orderTotal;
+      if (!taxData) {
+        console.log(`No tax data found for state: ${stateCode}`);
+        return 0;
+      }
 
-      // Calculate tax amount
-      const taxAmount = (taxableAmount * taxData.taxRate) / 100;
+      // Calculate tax amount directly from the order total
+      const taxAmount = (subTotal * taxData.taxRate) / 100;
 
-      // Round tax amount to 2 decimal places (optional)
-      const roundedTaxAmount = Math.round(taxAmount * 100) / 100;
-
-      return roundedTaxAmount;
+      // Round tax amount to 2 decimal places
+      return Math.round(taxAmount * 100) / 100;
     } catch (error) {
+      console.error('Failed to calculate tax:', error);
       throw new HttpException('Unable to calculate tax amount.', 502);
     }
   }
