@@ -49,6 +49,7 @@ export class CartService {
       totalAmount: 0,
       stateCode: '',
     };
+
     const itemId = cartDto.id;
     const itemQty = Number(cartDto.qty) || 1;
     const stateCode = cartDto.stateCode || 'FL';
@@ -115,7 +116,8 @@ export class CartService {
     cart.tax = tax;
     cart.totalAmount = total;
 
-    return cart;
+    // Return updated cart
+    return (session.cart = cart);
   }
 
   async removeItem(itemId: string, session: Record<string, any>) {

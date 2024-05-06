@@ -10,7 +10,7 @@ async function bootstrap() {
 
   app.enableCors();
   app.use(helmet());
-  app.setGlobalPrefix('api/v1');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -19,6 +19,7 @@ async function bootstrap() {
     }),
   );
 
+  app.setGlobalPrefix('api/v1');
   // Mongo Store
   const mongoStore = app.get(MongoSessionStore);
 
@@ -29,7 +30,10 @@ async function bootstrap() {
       secret: process.env.SESSION_SECRET,
       resave: false,
       saveUninitialized: false,
-      cookie: { maxAge: 1000 * 60 * 60 * 24 }, // 24 hours
+      cookie: {
+        secure: process.env.NODE_ENV === 'production', // Secure in production
+        maxAge: 1000 * 60 * 60 * 24,
+      }, // 24 hours
       store: mongoStore,
     }),
   );
