@@ -172,7 +172,7 @@ export class OrderService {
         productBrand: product.productBrand,
         partNumber: product.partNumber,
         sku: product.sku,
-        merchantId: product.merchantId,
+        merchant: product.merchant,
       },
     };
   }
@@ -298,7 +298,7 @@ export class OrderService {
     const productsByMerchant: Record<string, OrderItem[]> = {};
 
     for (const orderItem of orderItems) {
-      const merchantId = orderItem.product.merchantId.toHexString(); // Convert ObjectId to string
+      const merchantId = orderItem.product.merchant.toHexString(); // Convert ObjectId to string
       if (!productsByMerchant[merchantId]) {
         productsByMerchant[merchantId] = [];
       }

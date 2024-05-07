@@ -7,10 +7,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
-import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from '../users/users.module';
 import { Merchant, MerchantSchema } from 'src/schemas/merchant.schema';
 import { SellerService } from '../seller/seller.service';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [

@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 
+import { Mongoose } from 'mongoose';
 import { Role } from 'src/api/auth/enums';
 
 enum accountStatus {
@@ -21,6 +22,7 @@ declare global {
       isEmailVerified: boolean;
       status: accountStatus;
       merchant?: {
+        _id: Mongoose.Types.ObjectId;
         user: User;
         bussinessName: string;
         bussinessLicense: string;

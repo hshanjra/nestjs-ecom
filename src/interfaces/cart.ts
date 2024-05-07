@@ -1,7 +1,8 @@
+import * as mongoose from 'mongoose';
 /* Cart Blueprint */
 export interface cartItem {
   product: {
-    _id?: string;
+    _id?: mongoose.Types.ObjectId;
     productTitle: string;
     productSlug: string;
     productBrand: string;
@@ -14,7 +15,7 @@ export interface cartItem {
 }
 
 export interface ICart {
-  items: Record<string, cartItem>;
+  items: Record<any, cartItem>;
   totalQty: number;
   subTotal: number;
   tax: number;

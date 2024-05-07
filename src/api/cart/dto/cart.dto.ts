@@ -14,7 +14,7 @@ export class CartDto {
   @IsNotEmpty()
   @IsString()
   @IsMongoId()
-  id: string;
+  id: any;
 
   @IsNotEmpty()
   @IsNumberString()

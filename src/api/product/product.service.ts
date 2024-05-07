@@ -1,4 +1,4 @@
-/* FOR SELLERS */ import {
+import {
   BadRequestException,
   Injectable,
   NotFoundException,
@@ -11,6 +11,7 @@ import { Model } from 'mongoose';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { ProductImage } from 'src/interfaces';
 import { CompatiblePartsQuery } from './dto/compatible-query.dto';
+import * as mongoose from 'mongoose';
 
 interface paginateArgs {
   page: number;
@@ -28,6 +29,7 @@ export class ProductService {
   async create(
     createProductDto: CreateProductDto,
     productImages: Express.Multer.File[],
+    merchantId: string,
   ) {
     const uploadedImages = await Promise.all(
       productImages.map((image) =>
@@ -57,7 +59,7 @@ export class ProductService {
         vehicleYear: createProductDto.compatibleYear,
       },
 
-      merchantId: '6621547d2b57a5386df7c45e',
+      merchant: merchantId,
     });
   }
 
@@ -136,7 +138,9 @@ export class ProductService {
 
   /* FOR CUSTOMERS */
 
-  async findActiveProductById(productId: string): Promise<Product> {
+  async findActiveProductById(
+    productId: mongoose.Types.ObjectId,
+  ): Promise<Product> {
     return await this.productModel
       .findOne({ _id: productId, isActive: true })
       .select('-merchantId -isActive -isFeaturedProduct');
@@ -204,7 +208,10 @@ export class ProductService {
 
   /* SHARED */
   // Decrease the stock by ordered quantity
-  async decreaseProductStock(id: string, orderedQty: number): Promise<boolean> {
+  async decreaseProductStock(
+    id: mongoose.Types.ObjectId,
+    orderedQty: number,
+  ): Promise<boolean> {
     // Find the product by productId
     const product = await this.productModel.findById(id);
 

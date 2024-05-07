@@ -10,6 +10,7 @@ import {
   Query,
   Req,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -22,19 +23,24 @@ import { ProductService } from '../product/product.service';
 import { UpdateProductDto } from '../product/dto/update-product.dto';
 import { CancelOrderDto } from '../order/dto/cancel-order.dto';
 import { ProcessOrderDto } from '../order/dto/process-order.dto';
+import { Role } from '../auth/enums';
+import { Auth } from '../auth/decorators/auth.decorator';
 
-@Controller('seller') //TODO: implement authorization for [seller] only.
+@Controller('seller')
 export class SellerController {
   constructor(private readonly productService: ProductService) {}
 
   /* PRODUCTS */
 
   @Post('products')
+  @Auth(Role.SELLER)
   @UseInterceptors(FilesInterceptor('images'))
   async create(
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() images: Express.Multer.File[],
+    @Req() req: Request,
   ) {
+    const merchantId = req.user.merchant._id;
     //Validating Images before Upload
     if (!images || images.length === 0) {
       throw new BadRequestException('Please upload at least one image.');
@@ -54,7 +60,11 @@ export class SellerController {
         );
       }
     }
-    return await this.productService.create(createProductDto, images);
+    return await this.productService.create(
+      createProductDto,
+      images,
+      merchantId,
+    );
   }
 
   @Get('products')

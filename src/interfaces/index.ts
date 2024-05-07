@@ -1,16 +1,18 @@
+import * as mongoose from 'mongoose';
+
 export interface OrderItem {
   qty: number;
   price: number;
   shippingPrice: number;
   subTotal: number;
   product: {
-    _id: string;
+    _id: mongoose.Types.ObjectId;
     productTitle: string;
     productSlug: string;
     productBrand: string;
     partNumber: string;
     sku: string;
-    merchantId: any;
+    merchant: any;
   };
 }
 

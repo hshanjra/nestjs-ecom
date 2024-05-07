@@ -38,10 +38,10 @@ export class UsersService {
 
     if (createUserDto.role === 'SELLER') {
       //merhchant profile
-      const mp = await this.sellerService.create({ userId: newuser._id });
+      const mp = await this.sellerService.create({ user: newuser._id });
       await this.userModel.findByIdAndUpdate(newuser._id, {
         $push: { roles: Role.SELLER },
-        merchantId: mp._id,
+        merchant: mp._id,
       });
     }
     return newuser;

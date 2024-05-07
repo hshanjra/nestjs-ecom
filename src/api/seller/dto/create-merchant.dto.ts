@@ -1,5 +1,5 @@
 export class CreateMerchantDto {
-  userId: any;
+  user: any;
   bussinessName?: string;
   bussinessLicense?: string;
   bussinessLicenseExpiry?: Date;

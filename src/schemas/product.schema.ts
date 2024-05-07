@@ -10,7 +10,7 @@ import {
 
 @Schema({ timestamps: true })
 export class Product {
-  _id: string;
+  _id: mongoose.Types.ObjectId;
   @Prop({ type: String, required: true, index: true })
   productTitle: string;
 
@@ -123,7 +123,7 @@ export class Product {
     required: true,
     index: true,
   })
-  merchantId: mongoose.Types.ObjectId;
+  merchant: mongoose.Types.ObjectId;
 }
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
