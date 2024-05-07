@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { MongoSessionStore } from './utility/store/mongo-session.store';
 import helmet from 'helmet';
 import * as session from 'express-session';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +13,7 @@ async function bootstrap() {
     origin: '*',
     credentials: true,
   });
+  app.use(cookieParser());
   app.use(helmet({}));
 
   app.useGlobalPipes(

@@ -33,7 +33,7 @@ export class User {
   @Prop({
     type: Array,
     enum: Role,
-    default: Role.CUSTOMER,
+    default: [Role.CUSTOMER],
   })
   roles: Array<Role>;
 
@@ -52,7 +52,7 @@ export class User {
 
   /* one-to-one */
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Merchant' })
-  merchantId: Merchant;
+  merchant: Merchant;
 
   // @Prop({ type: Boolean, default: false })
   // isMerchantVerified: boolean;

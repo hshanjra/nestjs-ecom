@@ -19,8 +19,8 @@ export class SellerService {
     return `This action returns all merchant`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} merchant`;
+  async findOne(id: any) {
+    return await this.merchantModel.findOne(id);
   }
 
   update(id: number, updateMerchantDto: UpdateMerchantDto) {

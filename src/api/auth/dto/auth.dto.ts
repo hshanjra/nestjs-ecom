@@ -39,7 +39,10 @@ export class SignUpDto {
   phone: string;
 
   @IsOptional()
-  @IsIn(['CUSTOMER', 'SELLER'])
+  @IsNotEmpty()
+  @IsIn(['SELLER'], {
+    message: `Role must be 'SELLER' Only. Don't include if 'CUSTOMER'`,
+  })
   role: string;
 
   @IsNotEmpty()

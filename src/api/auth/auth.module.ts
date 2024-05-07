@@ -9,6 +9,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
 import { PassportModule } from '@nestjs/passport';
 import { UsersModule } from '../users/users.module';
+import { Merchant, MerchantSchema } from 'src/schemas/merchant.schema';
+import { SellerService } from '../seller/seller.service';
 
 @Module({
   imports: [
@@ -32,10 +34,14 @@ import { UsersModule } from '../users/users.module';
         name: User.name,
         schema: UserSchema,
       },
+      {
+        name: Merchant.name,
+        schema: MerchantSchema,
+      },
     ]),
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, SellerService],
 })
 export class AuthModule {}

@@ -8,12 +8,16 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthPayloadDto, SignUpDto } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
+import { Request } from 'express';
+import { Role } from './enums';
+import { SellerService } from '../seller/seller.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private sellerService: SellerService,
   ) {}
 
   async validateUser(authPayload: AuthPayloadDto) {
@@ -23,12 +27,20 @@ export class AuthService {
     if (!findUser)
       throw new HttpException(`User with ${authPayload.email} not found`, 404);
 
-    const isPwMatched = bcrypt.compare(authPayload.password, findUser.password);
+    const isPwMatched = await bcrypt.compare(
+      authPayload.password,
+      findUser.password,
+    );
     if (!isPwMatched) throw new UnauthorizedException('Invalid credentials.');
 
     delete findUser.password;
 
-    return findUser;
+    const payload = {
+      _id: findUser._id,
+      roles: findUser.roles,
+      fullName: findUser.firstName + ' ' + findUser.lastName,
+    };
+    return { access_Token: await this.jwtService.signAsync(payload) };
   }
 
   async signUp(singUpDto: SignUpDto) {
@@ -52,8 +64,25 @@ export class AuthService {
     };
 
     return {
-      fullName: user.firstName + ' ' + user.lastName,
       token: await this.jwtService.signAsync(payload),
     };
+  }
+
+  async me(req: Request) {
+    let permissions;
+    if (req.user.merchant) {
+      const merchant = req.user.merchant;
+      permissions = {
+        registeredSeller: req.user.roles.includes(Role.SELLER),
+        verifiedSeller: merchant.isVerified,
+        emailVerified: req.user.isEmailVerified,
+        accountStatus: req.user.status,
+      };
+      return permissions;
+    }
+    return (permissions = {
+      emailVerified: req.user.isEmailVerified,
+      accountStatus: req.user.status,
+    });
   }
 }

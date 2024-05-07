@@ -12,7 +12,7 @@ enum accountStatus {
 export class Merchant {
   /* one-to-one */
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true })
-  userId: User;
+  user: User;
 
   @Prop({ type: String })
   bussinessName: string;
@@ -21,7 +21,7 @@ export class Merchant {
   bussinessLicense: string;
 
   @Prop({ type: Date })
-  bussinessLicenseExpiry: Date;
+  bussinessLicenseExp: Date;
 
   @Prop({
     type: {
