@@ -10,7 +10,6 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { Request } from 'express';
 import { Role } from './enums';
-import { SellerService } from '../seller/seller.service';
 
 @Injectable()
 export class AuthService {

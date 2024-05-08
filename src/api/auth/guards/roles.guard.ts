@@ -1,8 +1,9 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '../enums';
@@ -30,12 +31,21 @@ export class RolesGuard implements CanActivate {
 
     //if user email is not verified
     if (!user.isEmailVerified)
-      throw new UnauthorizedException('Email is not verified.');
+      throw new BadRequestException('Email is not verified.');
 
     // if merchant is not verified.
     if (user.roles.includes(Role.SELLER) && !user.merchant.isVerified) {
-      throw new UnauthorizedException('You are not verified as a seller.');
+      throw new ForbiddenException('You are not verified as a seller.');
     }
-    return requiredRoles.every((role) => user.roles.includes(role));
+    const isAuthorized = requiredRoles.every((role) =>
+      user.roles.includes(role),
+    );
+    if (!isAuthorized) {
+      throw new ForbiddenException(
+        'You do not have permission to access this resource.',
+      );
+    }
+
+    return true;
   }
 }
