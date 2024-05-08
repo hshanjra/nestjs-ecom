@@ -62,7 +62,8 @@ export class OrderService {
     switch (dto.paymentMethod) {
       case 'CARD':
         // Write code to charge stripe amount
-        _pi = await this.stripeService.chargeCard(order.totalPrice);
+        // _pi = await this.stripeService.chargeCard(order.totalPrice);
+        await this.splitOrder(order._id);
         break;
 
       case 'PAYPAL':
@@ -244,7 +245,7 @@ export class OrderService {
 
   /* SELLER ORDER SERVICE */
 
-  async splitOrder(orderId: string): Promise<boolean> {
+  private async splitOrder(orderId: string): Promise<boolean> {
     const order = await this.orderModel
       .findById(orderId)
       .populate('orderItems.product')
