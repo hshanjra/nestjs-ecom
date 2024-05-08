@@ -17,72 +17,88 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-    private sellerService: SellerService,
   ) {}
 
   async validateUser(authPayload: AuthPayloadDto) {
-    const findUser = await this.usersService.findUserWithEmail(
-      authPayload.email,
-    );
-    if (!findUser)
-      throw new HttpException(`User with ${authPayload.email} not found`, 404);
+    // Find user with the provided email
+    const user = await this.usersService.findUserWithEmail(authPayload.email);
+    if (!user) {
+      throw new HttpException(
+        `User with email ${authPayload.email} not found`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
 
-    const isPwMatched = await bcrypt.compare(
+    // Check if the provided password matches the user's password
+    const isPasswordMatched = await bcrypt.compare(
       authPayload.password,
-      findUser.password,
+      user.password,
     );
-    if (!isPwMatched) throw new UnauthorizedException('Invalid credentials.');
+    if (!isPasswordMatched) {
+      throw new UnauthorizedException('Invalid credentials.');
+    }
 
-    delete findUser.password;
+    // Remove sensitive information from user object
+    const { _id, roles, firstName, lastName } = user;
 
-    const payload = {
-      _id: findUser._id,
-      roles: findUser.roles,
-      fullName: findUser.firstName + ' ' + findUser.lastName,
-    };
-    return { access_Token: await this.jwtService.signAsync(payload) };
+    // Generate JWT payload
+    const payload = this.generateJwtPayload(_id, roles, firstName, lastName);
+
+    // Generate and return access token
+    return await this.jwtService.signAsync(payload);
   }
 
-  async signUp(singUpDto: SignUpDto) {
+  async signUp(signUpDto: SignUpDto) {
     const existingUser = await this.usersService.findUserWithEmail(
-      singUpDto.email,
+      signUpDto.email,
     );
     if (existingUser)
-      throw new HttpException(
-        'Email already in use.',
-        HttpStatus.UNPROCESSABLE_ENTITY,
-      );
+      throw new HttpException('Email already in use.', HttpStatus.CONFLICT);
     // existingUser = await this.usersService.findUserWithPhone(singUpDto.phone);
     // if (existingUser)
     //   throw new HttpException('User already exists with this phone.', 409);
 
-    const user = await this.usersService.create(singUpDto);
-    const payload = {
-      _id: user._id,
-      roles: user.roles,
-      fullName: user.firstName + ' ' + user.lastName,
-    };
+    // Create the user
+    const newUser = await this.usersService.create(signUpDto);
 
-    return {
-      token: await this.jwtService.signAsync(payload),
-    };
+    // Generate JWT token payload
+    const payload = this.generateJwtPayload(
+      newUser._id,
+      newUser.roles,
+      newUser.firstName,
+      newUser.lastName,
+    );
+
+    // Sign and return JWT token
+    return await this.jwtService.signAsync(payload);
   }
 
   async me(req: Request) {
-    let permissions;
-    if (req.user.merchant) {
-      const merchant = req.user.merchant;
-      permissions = {
-        registeredSeller: req.user.roles.includes(Role.SELLER),
-        verifiedSeller: merchant.isVerified,
-        emailVerified: req.user.isEmailVerified,
-        accountStatus: req.user.status,
-      };
-      return permissions;
-    }
-    return (permissions = {
+    const permissions: any = {
       emailVerified: req.user.isEmailVerified,
       accountStatus: req.user.status,
-    });
+    };
+
+    if (req.user.merchant) {
+      const merchant = req.user.merchant;
+      permissions.registeredSeller = req.user.roles.includes(Role.SELLER);
+      permissions.verifiedSeller = merchant.isVerified;
+    }
+
+    return permissions;
+  }
+
+  /* PRIVATE METHODS */
+  private generateJwtPayload(
+    _id: any,
+    roles: string[],
+    firstName: string,
+    lastName: string,
+  ) {
+    return {
+      _id,
+      roles,
+      fullName: `${firstName} ${lastName}`,
+    };
   }
 }

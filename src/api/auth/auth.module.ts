@@ -8,8 +8,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
 import { UsersModule } from '../users/users.module';
-import { Merchant, MerchantSchema } from 'src/schemas/merchant.schema';
-import { SellerService } from '../seller/seller.service';
 import { PassportModule } from '@nestjs/passport';
 
 @Module({
@@ -34,14 +32,10 @@ import { PassportModule } from '@nestjs/passport';
         name: User.name,
         schema: UserSchema,
       },
-      {
-        name: Merchant.name,
-        schema: MerchantSchema,
-      },
     ]),
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, SellerService],
+  providers: [AuthService, LocalStrategy, JwtStrategy],
 })
 export class AuthModule {}
