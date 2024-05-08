@@ -27,40 +27,50 @@ export class ProductService {
 
   /* FOR SELLERS */
   async create(
-    createProductDto: CreateProductDto,
+    dto: CreateProductDto,
     productImages: Express.Multer.File[],
     merchantId: string,
-  ) {
-    const uploadedImages = await Promise.all(
-      productImages.map((image) =>
-        this.cloudinaryService.uploadSingleImage(image),
-      ),
+  ): Promise<Product> {
+    const uploadedImages = await this.uploadAndMapImages(productImages);
+
+    const productDetails = this.buildProductDetails(
+      dto,
+      uploadedImages,
+      merchantId,
     );
 
-    const pImages: ProductImage[] = uploadedImages.map((image) => ({
-      url: image.url,
-      alt: image.alt,
-      fileType: image.fileType,
-    }));
+    return await this.productModel.create(productDetails);
+  }
 
-    return await this.productModel.create({
-      ...createProductDto,
-      productDimensions: {
-        length: createProductDto.productLength,
-        height: createProductDto.productHeight,
-        width: createProductDto.productWidth,
-      },
-      productImages: pImages,
-      compatibleWith: {
-        vehicleMake: createProductDto.compatibleMake,
-        vehicleModel: createProductDto.compatibleModel,
-        vehicleSubmodel: createProductDto.compatibleSubmodel,
-        vehicleEngine: createProductDto.compatibleEngine,
-        vehicleYear: createProductDto.compatibleYear,
-      },
-
-      merchant: merchantId,
+  // Upate product
+  async updateSellerProduct(
+    slug: string,
+    dto: UpdateProductDto,
+    merchantId: string,
+    images?: Express.Multer.File[],
+  ): Promise<Product> {
+    const product = await this.productModel.findOne({
+      productSlug: slug,
+      merchantId: merchantId,
     });
+
+    if (!product) throw new NotFoundException('Product not found');
+
+    //hanlde images
+    // Handle images if provided
+    if (images && images.length > 0) {
+      const uploadedImages = await this.uploadAndMapImages(images);
+      product.productImages.push(...uploadedImages); // Assuming productImages is an array
+    }
+    // Update product data
+    Object.assign(product, dto);
+
+    //TODO: remove sensitive fields
+
+    // Save the updated product data
+    await product.save();
+
+    return product;
   }
 
   async findAllSellerProducts(sellerId: string) {
@@ -71,65 +81,6 @@ export class ProductService {
         '_id productTitle productSlug productBrand shortDescription partNumber productStock regularPrice salePrice productImages isActive createdAt',
       );
     return sellerProducts;
-  }
-
-  async updateSellerProduct(
-    slug: string,
-    dto: UpdateProductDto,
-    images?: Express.Multer.File[],
-  ) {
-    const merchantId = '6621547d2b57a5386df7c45e';
-
-    const product = await this.productModel.findOne({
-      productSlug: slug,
-      merchantId: merchantId,
-    });
-
-    if (!product) throw new NotFoundException('Product not found');
-
-    //hanlde images
-    if (images && images.length > 0) {
-      for (const file of images) {
-        const allowedTypes = [
-          'image/jpeg',
-          'image/png',
-          'image/gif',
-          'image/jpg',
-          'image/webp',
-        ];
-        if (!allowedTypes.includes(file.mimetype)) {
-          throw new BadRequestException(
-            'Product images must be of type JPEG, PNG, GIF, WebP.',
-          );
-        }
-        // Upload Images on clodinary if available
-        const uploadedImages = await Promise.all(
-          images.map((image) =>
-            this.cloudinaryService.uploadSingleImage(image),
-          ),
-        );
-
-        const productImages = uploadedImages.map((image) => ({
-          url: image.url,
-          alt: image.alt,
-          filetype: image.fileType,
-        }));
-
-        //push the new product images
-        product.productImages.push(...productImages);
-      }
-    }
-    //hanlde form data
-
-    // Update product data
-    Object.assign(product, dto);
-
-    //TODO: remove sensitive fields
-
-    // Save the updated product data
-    await product.save();
-
-    return product;
   }
 
   remove(id: number) {
@@ -226,5 +177,56 @@ export class ProductService {
     await product.save();
 
     return true;
+  }
+
+  /* PRIVATE METHODS */
+
+  private async uploadAndMapImages(
+    images: Express.Multer.File[],
+  ): Promise<any[]> {
+    const uploadedImages = await Promise.all(
+      images.map((image) => this.cloudinaryService.uploadSingleImage(image)),
+    );
+
+    return uploadedImages.map((image) => ({
+      url: image.url,
+      alt: image.alt || 'Product image', // Provide default alt text if not available
+      filetype: image.fileType,
+    }));
+  }
+
+  private buildProductDetails(
+    dto: CreateProductDto,
+    images: ProductImage[],
+    merchantId: string,
+  ): any {
+    const {
+      productLength,
+      productHeight,
+      productWidth,
+      compatibleMake,
+      compatibleModel,
+      compatibleSubmodel,
+      compatibleEngine,
+      compatibleYear,
+    } = dto;
+
+    return {
+      ...dto,
+      productDimensions: {
+        length: productLength,
+        height: productHeight,
+        width: productWidth,
+      },
+      productImages: images,
+      compatibleWith: {
+        vehicleMake: compatibleMake,
+        vehicleModel: compatibleModel,
+        vehicleSubmodel: compatibleSubmodel,
+        vehicleEngine: compatibleEngine,
+        vehicleYear: compatibleYear,
+      },
+      merchant: merchantId,
+    };
   }
 }

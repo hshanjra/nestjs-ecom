@@ -62,16 +62,18 @@ export class SellerController {
   }
 
   @Patch('products/:slug')
-  @UseInterceptors(FilesInterceptor('images'))
+  @UseInterceptors(FilesInterceptor('images'), ImagesInterceptor)
   update(
     @Param('slug') slug: string,
     @Body() updateProductDto: UpdateProductDto,
     @UploadedFiles() images: Express.Multer.File[],
+    @Req() req: Request,
   ) {
     return this.productService.updateSellerProduct(
       slug,
       updateProductDto,
       images,
+      req.user.merchant._id,
     );
   }
 
