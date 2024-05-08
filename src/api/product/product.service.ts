@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -26,6 +22,8 @@ export class ProductService {
   ) {}
 
   /* FOR SELLERS */
+
+  // create product
   async create(
     dto: CreateProductDto,
     productImages: Express.Multer.File[],
@@ -56,7 +54,6 @@ export class ProductService {
 
     if (!product) throw new NotFoundException('Product not found');
 
-    //hanlde images
     // Handle images if provided
     if (images && images.length > 0) {
       const uploadedImages = await this.uploadAndMapImages(images);
@@ -71,6 +68,11 @@ export class ProductService {
     await product.save();
 
     return product;
+  }
+
+  // find product by slug
+  async findBySlug(slug: string) {
+    return await this.productModel.findOne({ productSlug: slug });
   }
 
   async findAllSellerProducts(sellerId: string) {
@@ -94,6 +96,12 @@ export class ProductService {
   ): Promise<Product> {
     return await this.productModel
       .findOne({ _id: productId, isActive: true })
+      .select('-merchantId -isActive -isFeaturedProduct');
+  }
+
+  async findActiveProductBySlug(slug: string): Promise<Product> {
+    return await this.productModel
+      .findOne({ productSlug: slug, isActive: true })
       .select('-merchantId -isActive -isFeaturedProduct');
   }
 

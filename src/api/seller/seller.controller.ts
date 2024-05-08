@@ -72,8 +72,8 @@ export class SellerController {
     return this.productService.updateSellerProduct(
       slug,
       updateProductDto,
-      images,
       req.user.merchant._id,
+      images,
     );
   }
 
