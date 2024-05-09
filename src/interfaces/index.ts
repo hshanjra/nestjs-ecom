@@ -28,11 +28,11 @@ export interface IAddress {
   country: string;
 }
 
-export interface ITrackingInfo {
-  trackingNumber: number;
-  shippingCarrier: string;
-  shippedDate: Date;
-}
+// export interface ITrackingInfo {
+//   trackingNumber: number;
+//   shippingCarrier: string;
+//   shippedDate: Date;
+// }
 
 export interface IPaymentResponse {
   txnId: string;

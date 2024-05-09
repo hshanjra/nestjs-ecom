@@ -280,7 +280,7 @@ export class OrderService {
 
       const sellerOrderData = {
         orderId: order._id,
-        merchantId,
+        merchantRef: merchantId,
         orderItems,
         totalPrice,
       };
@@ -311,8 +311,10 @@ export class OrderService {
 
   private calcTotalPrice(orderItems: OrderItem[]): number {
     let totalPrice = 0;
+    let shippingPrice = 0;
     for (const orderItem of orderItems) {
-      totalPrice += orderItem.subTotal;
+      shippingPrice = orderItem.shippingPrice;
+      totalPrice += orderItem.subTotal + shippingPrice;
     }
     return totalPrice;
   }

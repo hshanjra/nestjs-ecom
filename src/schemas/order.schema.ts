@@ -1,24 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { User } from './user.schema';
-import {
-  IAddress,
-  IPaymentResponse,
-  ITrackingInfo,
-  OrderItem,
-} from 'src/interfaces';
-import {
-  OrderStatus,
-  paymentResponse,
-  ShippingCarrier,
-} from 'src/api/order/enums';
+import { IAddress, IPaymentResponse, OrderItem } from 'src/interfaces';
+import { OrderStatus, paymentResponse } from 'src/api/order/enums';
 
 @Schema({ timestamps: true })
 export class Order {
   _id: string;
   // customer id could be blank if user is not logged in i.e. guest checkout
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  customerId: User;
+  customerRef: User;
 
   @Prop({
     required: true,
@@ -113,7 +104,7 @@ export class Order {
   @Prop({ type: String, default: null })
   customerIP: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, max: 250 })
   orderNotes: string;
 }
 export const OrderSchema = SchemaFactory.createForClass(Order);
@@ -123,7 +114,7 @@ export const OrderSchema = SchemaFactory.createForClass(Order);
 @Schema({ timestamps: true })
 export class SellerOrder {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order' })
-  orderId: Order;
+  orderRef: Order;
 
   @Prop({
     type: [
@@ -131,6 +122,7 @@ export class SellerOrder {
         name: { type: String },
         qty: { type: Number, default: 1, required: true },
         price: { type: Number, required: true },
+        shippingPrice: { type: Number },
         subTotal: { type: Number, required: true },
         productId: {
           type: mongoose.Schema.Types.ObjectId,
@@ -142,7 +134,10 @@ export class SellerOrder {
   })
   orderItems: OrderItem[];
 
-  @Prop({ type: Number, default: 0.0 })
+  // @Prop({ type: Number, default: 0.0 })
+  // shippingPrice: number;
+
+  @Prop({ type: Number, default: 0.0, required: true })
   totalPrice: number;
 
   @Prop({
@@ -153,24 +148,10 @@ export class SellerOrder {
   orderStatus: OrderStatus;
 
   @Prop({
-    type: {
-      trackingNumber: Number,
-      shippingCarrier: {
-        type: String,
-        enum: ShippingCarrier,
-      },
-      shippedAt: Date,
-    },
-  })
-  trackingInfo: ITrackingInfo;
-
-  @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Merchant',
-    index: true,
     required: true,
   })
-  merchantId: string;
+  merchantRef: mongoose.Schema.Types.ObjectId;
 }
 export const SellerOrderSchema = SchemaFactory.createForClass(SellerOrder);
-SellerOrderSchema.index({ orderId: 1 }, { unique: true });

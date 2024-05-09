@@ -75,10 +75,10 @@ export class ProductService {
     return await this.productModel.findOne({ productSlug: slug });
   }
 
-  async findAllSellerProducts(sellerId: string) {
+  async findAllSellerProducts(merchantId: string) {
     //TODO: add pagination and offset
     const sellerProducts = await this.productModel
-      .find({ merchantId: sellerId })
+      .find({ merchantId })
       .select(
         '_id productTitle productSlug productBrand shortDescription partNumber productStock regularPrice salePrice productImages isActive createdAt',
       );
