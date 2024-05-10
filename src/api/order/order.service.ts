@@ -190,7 +190,7 @@ export class OrderService {
       paymentMethod: dto.paymentMethod,
       orderItems: orderItems,
       taxPrice: cart.tax,
-      shippingPrice: cart.shippingPrice,
+      totalShippingPrice: cart.totalShippingPrice,
       totalQty: cart.totalQty,
       totalPrice: cart.totalAmount,
     });
@@ -269,20 +269,23 @@ export class OrderService {
     for (const merchantId in productsByMerchant) {
       const products = productsByMerchant[merchantId];
       const totalPrice = this.calcTotalPrice(products);
+      const totalShippingPrice = this.calcTotalShippingPrice(products);
 
       // Populate orderItems array for the SellerOrder
       const orderItems = products.map((product) => ({
-        productId: product.product._id, // Assuming productId is the _id of the product
+        productRef: product.product._id, // Assuming productId is the _id of the product
         qty: product.qty,
+        shippingPrice: product.shippingPrice,
         price: product.price,
         subTotal: product.subTotal, // Populate subTotal from the original order item
       }));
 
       const sellerOrderData = {
-        orderId: order._id,
+        orderRef: order._id,
         merchantRef: merchantId,
         orderItems,
         totalPrice,
+        totalShippingPrice,
       };
 
       // Save the seller order
@@ -313,9 +316,16 @@ export class OrderService {
     let totalPrice = 0;
     let shippingPrice = 0;
     for (const orderItem of orderItems) {
-      shippingPrice = orderItem.shippingPrice;
+      shippingPrice = orderItem.shippingPrice * orderItem.qty;
       totalPrice += orderItem.subTotal + shippingPrice;
     }
     return totalPrice;
+  }
+  private calcTotalShippingPrice(orderItems: OrderItem[]): number {
+    let shippingPrice = 0;
+    for (const orderItem of orderItems) {
+      shippingPrice = orderItem.shippingPrice * orderItem.qty;
+    }
+    return shippingPrice;
   }
 }

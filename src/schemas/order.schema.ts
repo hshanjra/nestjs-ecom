@@ -86,7 +86,7 @@ export class Order {
   taxPrice: number;
 
   @Prop({ type: Number, required: true, default: 0.0 })
-  shippingPrice: number;
+  totalShippingPrice: number;
 
   @Prop({ type: Number, required: true, default: 0.0 })
   totalPrice: number;
@@ -113,18 +113,19 @@ export const OrderSchema = SchemaFactory.createForClass(Order);
 /* SELLER ORDERS SCHEMA */
 @Schema({ timestamps: true })
 export class SellerOrder {
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true })
   orderRef: Order;
 
   @Prop({
     type: [
       {
+        _id: false,
         name: { type: String },
         qty: { type: Number, default: 1, required: true },
         price: { type: Number, required: true },
         shippingPrice: { type: Number },
         subTotal: { type: Number, required: true },
-        productId: {
+        productRef: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Product',
           required: true,
@@ -139,6 +140,9 @@ export class SellerOrder {
 
   @Prop({ type: Number, default: 0.0, required: true })
   totalPrice: number;
+
+  @Prop({ type: Number, default: 0.0 })
+  totalShippingPrice: number;
 
   @Prop({
     type: String,

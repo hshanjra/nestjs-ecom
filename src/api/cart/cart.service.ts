@@ -45,7 +45,7 @@ export class CartService {
       totalQty: 0,
       subTotal: 0,
       tax: 0,
-      shippingPrice: 0,
+      totalShippingPrice: 0,
       totalAmount: 0,
       stateCode: '',
     };
@@ -97,19 +97,21 @@ export class CartService {
 
     // Calculate subtotal
     let subtotal = 0;
+    let totalShippingPrice = 0;
     for (const itemId in cart.items) {
       const item = cart.items[itemId];
       subtotal += item.product.salePrice * item.qty;
+      totalShippingPrice += item.shippingPrice * item.qty;
     }
 
     // Update shipping price
-    cart.shippingPrice = Number(existingProduct.shippingPrice);
+    cart.totalShippingPrice = Number(totalShippingPrice);
 
     // Calculate tax and total amount
     const tax = await this.calcTax(subtotal, stateCode);
 
     // Update total amount
-    const total = subtotal + tax + cart.shippingPrice;
+    const total = subtotal + tax + cart.totalShippingPrice;
 
     // Update cart with tax and total amount
     cart.subTotal = subtotal;
@@ -156,7 +158,7 @@ export class CartService {
     cart.totalQty = totalQty;
     cart.subTotal = subTotal;
     cart.tax = tax;
-    cart.shippingPrice = totalShippingPrice;
+    cart.totalShippingPrice = totalShippingPrice;
     cart.totalAmount = totalAmount;
 
     // Update session with the modified cart

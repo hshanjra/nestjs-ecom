@@ -19,7 +19,7 @@ export interface ICart {
   totalQty: number;
   subTotal: number;
   tax: number;
-  shippingPrice: number;
+  totalShippingPrice: number;
   totalAmount: number;
   stateCode: string;
 }
