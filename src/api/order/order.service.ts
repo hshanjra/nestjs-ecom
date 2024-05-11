@@ -8,7 +8,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientSession, Model } from 'mongoose';
-import { Order, SellerOrder } from 'src/schemas/order.schema';
+import { Order } from 'src/schemas/order.schema';
 import { OrderStatus } from './enums';
 import { cartItem, ICart } from 'src/interfaces/cart';
 import { TaxRate } from 'src/schemas/tax-rate.schema';
@@ -16,15 +16,16 @@ import { OrderItem } from 'src/interfaces';
 import { Product } from 'src/schemas/product.schema';
 import { ProductService } from '../product/product.service';
 import { StripeService } from 'src/utility/stripe/stripe.service';
+import { SellerService } from '../seller/seller.service';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectModel(TaxRate.name) private taxRateModel: Model<TaxRate>,
     @InjectModel(Order.name) private orderModel: Model<Order>,
-    @InjectModel(SellerOrder.name) private sellerOrderModel: Model<SellerOrder>,
     private productService: ProductService,
     private stripeService: StripeService,
+    private sellerService: SellerService,
   ) {}
 
   /* CUSTOMER */
@@ -63,7 +64,7 @@ export class OrderService {
       case 'CARD':
         // Write code to charge stripe amount
         // _pi = await this.stripeService.chargeCard(order.totalPrice);
-        await this.splitOrder(order._id);
+        await this.sellerService.splitOrder(order._id);
         break;
 
       case 'PAYPAL':
@@ -241,91 +242,5 @@ export class OrderService {
       },
       { session },
     );
-  }
-
-  /* SELLER ORDER SERVICE */
-
-  private async splitOrder(orderId: string): Promise<boolean> {
-    const order = await this.orderModel
-      .findById(orderId)
-      .populate('orderItems.product')
-      .exec();
-
-    if (
-      !order ||
-      order.orderStatus === OrderStatus.ORDER_COMPLETED ||
-      order.orderStatus === OrderStatus.ORDER_FAILED
-    ) {
-      console.log(
-        'Order is already separated into sellers or order is completed.',
-      );
-      return false;
-    }
-
-    // Group order items by merchantId
-    const productsByMerchant = this.groupProductsByMerchant(order.orderItems);
-
-    // Create separate orders for each merchant
-    for (const merchantId in productsByMerchant) {
-      const products = productsByMerchant[merchantId];
-      const totalPrice = this.calcTotalPrice(products);
-      const totalShippingPrice = this.calcTotalShippingPrice(products);
-
-      // Populate orderItems array for the SellerOrder
-      const orderItems = products.map((product) => ({
-        productRef: product.product._id, // Assuming productId is the _id of the product
-        qty: product.qty,
-        shippingPrice: product.shippingPrice,
-        price: product.price,
-        subTotal: product.subTotal, // Populate subTotal from the original order item
-      }));
-
-      const sellerOrderData = {
-        orderRef: order._id,
-        merchantRef: merchantId,
-        orderItems,
-        totalPrice,
-        totalShippingPrice,
-      };
-
-      // Save the seller order
-      await this.sellerOrderModel.create(sellerOrderData);
-    }
-
-    return true;
-  }
-
-  /* This method takes an array of products and groups them by seller ID, returning an object where each key represents a seller ID and its corresponding value is an array of products associated with that seller. */
-  private groupProductsByMerchant(
-    orderItems: OrderItem[],
-  ): Record<string, OrderItem[]> {
-    const productsByMerchant: Record<string, OrderItem[]> = {};
-
-    for (const orderItem of orderItems) {
-      const merchantId = orderItem.product.merchant.toHexString(); // Convert ObjectId to string
-      if (!productsByMerchant[merchantId]) {
-        productsByMerchant[merchantId] = [];
-      }
-      productsByMerchant[merchantId].push(orderItem);
-    }
-
-    return productsByMerchant;
-  }
-
-  private calcTotalPrice(orderItems: OrderItem[]): number {
-    let totalPrice = 0;
-    let shippingPrice = 0;
-    for (const orderItem of orderItems) {
-      shippingPrice = orderItem.shippingPrice * orderItem.qty;
-      totalPrice += orderItem.subTotal + shippingPrice;
-    }
-    return totalPrice;
-  }
-  private calcTotalShippingPrice(orderItems: OrderItem[]): number {
-    let shippingPrice = 0;
-    for (const orderItem of orderItems) {
-      shippingPrice = orderItem.shippingPrice * orderItem.qty;
-    }
-    return shippingPrice;
   }
 }

@@ -13,17 +13,28 @@ import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { Product, ProductSchema } from 'src/schemas/product.schema';
 import { ProductService } from '../product/product.service';
 import { StripeService } from 'src/utility/stripe/stripe.service';
+import { SellerService } from '../seller/seller.service';
+import { Merchant, MerchantSchema } from 'src/schemas/merchant.schema';
+import { Shipment, ShipmentSchema } from 'src/schemas/shipment.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       {
-        name: Order.name,
-        schema: OrderSchema,
+        name: Product.name,
+        schema: ProductSchema,
       },
       {
         name: SellerOrder.name,
         schema: SellerOrderSchema,
+      },
+      {
+        name: Shipment.name,
+        schema: ShipmentSchema,
+      },
+      {
+        name: Order.name,
+        schema: OrderSchema,
       },
       {
         name: TaxRate.name,
@@ -33,9 +44,19 @@ import { StripeService } from 'src/utility/stripe/stripe.service';
         name: Product.name,
         schema: ProductSchema,
       },
+      {
+        name: Merchant.name,
+        schema: MerchantSchema,
+      },
     ]),
   ],
   controllers: [OrderController],
-  providers: [OrderService, ProductService, CloudinaryService, StripeService],
+  providers: [
+    OrderService,
+    ProductService,
+    CloudinaryService,
+    StripeService,
+    SellerService,
+  ],
 })
 export class OrderModule {}

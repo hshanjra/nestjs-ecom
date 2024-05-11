@@ -5,6 +5,13 @@ import { MulterModule } from '@nestjs/platform-express';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Product, ProductSchema } from 'src/schemas/product.schema';
 import { ProductService } from '../product/product.service';
+import {
+  Order,
+  OrderSchema,
+  SellerOrder,
+  SellerOrderSchema,
+} from 'src/schemas/order.schema';
+import { Shipment, ShipmentSchema } from 'src/schemas/shipment.schema';
 
 @Module({
   imports: [
@@ -18,6 +25,18 @@ import { ProductService } from '../product/product.service';
       {
         name: Product.name,
         schema: ProductSchema,
+      },
+      {
+        name: SellerOrder.name,
+        schema: SellerOrderSchema,
+      },
+      {
+        name: Shipment.name,
+        schema: ShipmentSchema,
+      },
+      {
+        name: Order.name,
+        schema: OrderSchema,
       },
     ]),
   ],

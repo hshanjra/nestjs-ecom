@@ -24,6 +24,7 @@ import { ProcessOrderDto } from '../order/dto/process-order.dto';
 import { Role } from '../auth/enums';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ImagesInterceptor } from 'src/interceptors/images.interceptor';
+import { CreateShipmentDto } from './dto/create-shipment.dto';
 
 @Controller('seller')
 export class SellerController {
@@ -113,8 +114,11 @@ export class SellerController {
     return payload;
   }
 
-  @Post('orders/:id/process')
-  async ProcessOrder(@Param('id') id: string, @Body() dto: ProcessOrderDto) {
+  @Post('orders/:id/create-shipment')
+  async createShipment(
+    @Param('id') id: string,
+    @Body() dto: CreateShipmentDto,
+  ) {
     const payload = {
       orderId: 'Order has been processed ' + id,
       dto: dto,

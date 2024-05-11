@@ -9,14 +9,14 @@ export class Shipment {
     ref: 'SellerOrder',
     required: true,
   })
-  sellerOrderRef: mongoose.Types.ObjectId;
+  sellerOrderId: mongoose.Types.ObjectId;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Product',
     required: true,
   })
-  productRef: mongoose.Types.ObjectId;
+  productId: mongoose.Types.ObjectId;
 
   @Prop({ type: Number, required: true })
   orderedQty: number;
@@ -24,7 +24,7 @@ export class Shipment {
   @Prop({ type: Number, required: true })
   qtyInThisShipment: number;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, max: 20 })
   trackingId: string;
 
   @Prop({ type: String, enum: ShippingCarrier, required: true })
