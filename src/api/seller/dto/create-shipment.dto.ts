@@ -12,7 +12,7 @@ import { ShippingCarrier } from '../../order/enums';
 export class CreateShipmentDto {
   @IsMongoId()
   @IsNotEmpty()
-  productId: any;
+  productId: string;
 
   @IsNumberString()
   @IsNotEmpty()

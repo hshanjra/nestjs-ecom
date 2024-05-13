@@ -64,7 +64,7 @@ export class OrderService {
       case 'CARD':
         // Write code to charge stripe amount
         // _pi = await this.stripeService.chargeCard(order.totalPrice);
-        // await this.sellerService.splitOrder(order._id);
+        await this.sellerService.splitOrder(order.orderId);
         break;
 
       case 'PAYPAL':

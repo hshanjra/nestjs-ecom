@@ -45,49 +45,53 @@ export class SellerService {
 
   async splitOrder(orderId: string): Promise<boolean> {
     const order = await this.orderModel
-      .findById(orderId)
-      .populate('orderItems.product')
+      .aggregate([
+        { $match: { orderId: orderId } },
+        { $unwind: '$orderItems' },
+        {
+          $lookup: {
+            from: 'products', // The collection name for products
+            localField: 'orderItems.product.productId', // Field to match in the current collection (Order)
+            foreignField: 'productId', // Field to match in the products collection
+            as: 'product',
+          },
+        },
+        { $unwind: '$product' }, // Unwind to access the product details
+        {
+          $addFields: { 'orderItems.productId': '$product.productId' }, // Add productId to each OrderItem
+        },
+        {
+          $group: {
+            _id: '$product.merchant', // Group by the merchant ID from the product
+            orderItems: { $push: '$orderItems' },
+            totalPrice: { $sum: '$orderItems.subTotal' },
+            totalShippingPrice: { $first: '$totalShippingPrice' },
+            totalQty: { $sum: '$orderItems.qty' },
+          },
+        },
+      ])
       .exec();
 
-    if (
-      !order ||
-      order.orderStatus === OrderStatus.ORDER_COMPLETED ||
-      order.orderStatus === OrderStatus.ORDER_FAILED
-    ) {
-      console.log(
-        'Order is already separated into sellers or order is completed.',
-      );
+    if (!order || order.length === 0) {
+      console.log('Order not found or no order items found.');
       return false;
     }
 
-    // Group order items by merchantId
-    const productsByMerchant = this.groupProductsByMerchant(order.orderItems);
-
     // Create separate orders for each merchant
-    for (const merchantId in productsByMerchant) {
-      const products = productsByMerchant[merchantId];
-      const totalPrice = this.calcTotalPrice(products);
-      const totalShippingPrice = this.calcTotalShippingPrice(products);
-
-      // Populate orderItems array for the SellerOrder
-      const orderItems = products.map((product) => ({
-        productId: product.product.productId, // Assuming productId is the _id of the product
-        qty: product.qty,
-        shippingPrice: product.shippingPrice,
-        price: product.price,
-        subTotal: product.subTotal, // Populate subTotal from the original order item
-      }));
-
+    for (const merchantOrder of order) {
       const sellerOrderData = {
-        orderId: order._id,
-        merchantRef: merchantId,
-        orderItems,
-        totalPrice,
-        totalShippingPrice,
+        orderId: orderId,
+        merchantId: merchantOrder._id,
+        orderItems: merchantOrder.orderItems,
+        totalPrice: merchantOrder.totalPrice,
+        totalShippingPrice: merchantOrder.totalShippingPrice,
+        totalQty: merchantOrder.totalQty,
+        orderStatus: OrderStatus.ORDER_PLACED, // Set initial order status for the seller order
       };
 
       // Save the seller order
       await this.sellerOrderModel.create(sellerOrderData);
+      // TODO: notify the seller
     }
 
     return true;
@@ -98,16 +102,18 @@ export class SellerService {
     user: Express.User,
     dto: CreateShipmentDto,
   ) {
-    const sellerOrder = await this.sellerOrderModel.findById(orderId);
+    const sellerOrder = await this.sellerOrderModel.findOne({
+      orderId: orderId,
+    });
 
     if (!sellerOrder) throw new NotFoundException('Order not found.');
 
     // Verify the seller has the right to modify this seller order
-    if (sellerOrder.merchantRef.toString() !== user.merchant._id.toString())
+    if (sellerOrder.merchantId.toString() !== user.merchant._id.toString())
       throw new ForbiddenException('Unautorized access.');
 
     const newShipment = await this.shipmentModel.create({
-      sellerOrderId: sellerOrder._id,
+      sellerOrderId: sellerOrder.orderId,
       productId: dto.productId,
       orderedQty: dto.orderedQty,
       qtyInThisShipment: dto.qtyInThisShipment,

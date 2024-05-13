@@ -7,6 +7,9 @@ import { OrderStatus, paymentResponse } from 'src/api/order/enums';
 @Schema({ timestamps: true })
 export class Order {
   _id: string;
+
+  @Prop({ type: String, unique: true })
+  orderId: string;
   // customer id could be blank if user is not logged in i.e. guest checkout
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   customerRef: User;
@@ -108,13 +111,37 @@ export class Order {
   orderNotes: string;
 }
 export const OrderSchema = SchemaFactory.createForClass(Order);
-// OrderSchema.index({ customerId: 1 }, { unique: true });
+OrderSchema.index({ orderId: 1 }, { unique: true });
+
+// Genrating custom unique orderIds
+
+OrderSchema.pre('save', async function (next) {
+  if (!this.isNew) return next();
+
+  const prefix = 'BYP';
+
+  // Accessing the model via this.constructor
+  const OrderModel: mongoose.Model<Order> = this.constructor as any;
+  const lastOrder = await OrderModel.findOne().sort({ createdAt: -1 }).exec();
+
+  let orderId: string;
+  if (lastOrder) {
+    const lastOrderId = lastOrder.orderId;
+    const lastId = parseInt(lastOrderId.replace(prefix, ''), 10);
+    orderId = prefix + (lastId + 1).toString().padStart(5, '0');
+  } else {
+    orderId = prefix + '00001';
+  }
+
+  this.orderId = orderId;
+  next();
+});
 
 /* SELLER ORDERS SCHEMA */
 @Schema({ timestamps: true })
 export class SellerOrder {
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true })
-  orderRef: Order;
+  @Prop({ type: String, required: true })
+  orderId: string;
 
   @Prop({
     type: [
@@ -125,9 +152,8 @@ export class SellerOrder {
         price: { type: Number, required: true },
         shippingPrice: { type: Number },
         subTotal: { type: Number, required: true },
-        productRef: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Product',
+        productId: {
+          type: String,
           required: true,
         },
       },
@@ -156,6 +182,6 @@ export class SellerOrder {
     ref: 'Merchant',
     required: true,
   })
-  merchantRef: mongoose.Schema.Types.ObjectId;
+  merchantId: mongoose.Schema.Types.ObjectId;
 }
 export const SellerOrderSchema = SchemaFactory.createForClass(SellerOrder);
