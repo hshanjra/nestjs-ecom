@@ -50,6 +50,18 @@ export class User {
   })
   status: accountStatus;
 
+  @Prop({ type: String })
+  forgotPasswordToken: string;
+
+  @Prop({ type: Date })
+  forgotPasswordTokenExpiry: Date;
+
+  @Prop({ type: String })
+  verifyToken: string;
+
+  @Prop({ type: Date })
+  verifyTokenExpiry: Date;
+
   /* one-to-one */
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Merchant' })
   merchant: Merchant;

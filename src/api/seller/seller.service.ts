@@ -42,7 +42,7 @@ export class SellerService {
   remove(id: number) {
     return `This action removes a #${id} merchant`;
   }
-
+  // Split order across multiple sellers
   async splitOrder(orderId: string): Promise<boolean> {
     const order = await this.orderModel
       .aggregate([
