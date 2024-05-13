@@ -84,16 +84,6 @@ export class ProductService {
     return sellerProducts;
   }
 
-  async findAllByProductIds(
-    productIds: Array<string>,
-  ): Promise<Array<Product>> {
-    return await this.productModel
-      .find()
-      .where('productId')
-      .in(productIds)
-      .exec();
-  }
-
   remove(id: number) {
     return `This action removes a #${id} product`;
   }
