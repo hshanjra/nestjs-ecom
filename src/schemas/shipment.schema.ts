@@ -1,22 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import * as mongoose from 'mongoose';
 import { ShippingCarrier } from 'src/api/order/enums';
 
 @Schema({ timestamps: true })
 export class Shipment {
   @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'SellerOrder',
+    type: String,
     required: true,
   })
-  sellerOrderId: mongoose.Types.ObjectId;
+  orderId: string;
 
   @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
+    type: String,
     required: true,
   })
-  productId: mongoose.Types.ObjectId;
+  productId: string;
 
   @Prop({ type: Number, required: true })
   orderedQty: number;

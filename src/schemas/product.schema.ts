@@ -132,7 +132,6 @@ export class Product {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Merchant',
     required: true,
-    index: true,
   })
   merchant: mongoose.Types.ObjectId;
 }

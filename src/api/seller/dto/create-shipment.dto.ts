@@ -1,7 +1,6 @@
 import {
   IsDateString,
   IsEnum,
-  IsMongoId,
   IsNotEmpty,
   IsNumberString,
   IsString,
@@ -10,7 +9,7 @@ import {
 import { ShippingCarrier } from '../../order/enums';
 
 export class CreateShipmentDto {
-  @IsMongoId()
+  @IsString()
   @IsNotEmpty()
   productId: string;
 

@@ -113,7 +113,7 @@ export class SellerService {
       throw new ForbiddenException('Unautorized access.');
 
     const newShipment = await this.shipmentModel.create({
-      sellerOrderId: sellerOrder.orderId,
+      orderId: sellerOrder.orderId,
       productId: dto.productId,
       orderedQty: dto.orderedQty,
       qtyInThisShipment: dto.qtyInThisShipment,
