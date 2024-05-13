@@ -1,6 +1,5 @@
 import {
   IsDecimal,
-  IsMongoId,
   IsNotEmpty,
   IsNumberString,
   IsOptional,
@@ -13,8 +12,7 @@ import {
 export class CartDto {
   @IsNotEmpty()
   @IsString()
-  @IsMongoId()
-  id: any;
+  productId: string;
 
   @IsNotEmpty()
   @IsNumberString()

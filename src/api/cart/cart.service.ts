@@ -50,13 +50,13 @@ export class CartService {
       stateCode: '',
     };
 
-    const itemId = cartDto.id;
+    const itemId = cartDto.productId;
     const itemQty = Number(cartDto.qty) || 1;
     const stateCode = cartDto.stateCode || 'FL';
 
     // check if product exists in the database
     const existingProduct =
-      await this.productService.findActiveProductById(itemId);
+      await this.productService.findActiveProductByProductId(itemId);
 
     if (!existingProduct) throw new NotFoundException('Product not found.');
 

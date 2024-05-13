@@ -7,7 +7,6 @@ import { Model } from 'mongoose';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { ProductImage } from 'src/interfaces';
 import { CompatiblePartsQuery } from './dto/compatible-query.dto';
-import * as mongoose from 'mongoose';
 
 interface paginateArgs {
   page: number;
@@ -91,12 +90,11 @@ export class ProductService {
 
   /* FOR CUSTOMERS */
 
-  async findActiveProductById(
-    productId: mongoose.Types.ObjectId,
-  ): Promise<Product> {
+  async findActiveProductByProductId(productId: string): Promise<Product> {
     return await this.productModel
-      .findOne({ _id: productId, isActive: true })
-      .select('-merchantId -isActive -isFeaturedProduct');
+      .findOne({ productId: productId, isActive: true })
+      .select('-merchant -isActive -isFeaturedProduct -_id')
+      .populate('category', '-_id -createdAt -updatedAt -__v');
   }
 
   async findActiveProductBySlug(slug: string): Promise<Product> {
@@ -168,14 +166,14 @@ export class ProductService {
   /* SHARED */
   // Decrease the stock by ordered quantity
   async decreaseProductStock(
-    id: mongoose.Types.ObjectId,
+    productId: string,
     orderedQty: number,
   ): Promise<boolean> {
     // Find the product by productId
-    const product = await this.productModel.findById(id);
+    const product = await this.productModel.findOne({ productId });
 
     if (!product) {
-      throw new NotFoundException(`Product with ID ${id} not found.`);
+      throw new NotFoundException(`Product with ID ${productId} not found.`);
     }
 
     // Decrease the stock by ordered quantity

@@ -71,7 +71,7 @@ export class SellerService {
 
       // Populate orderItems array for the SellerOrder
       const orderItems = products.map((product) => ({
-        productRef: product.product._id, // Assuming productId is the _id of the product
+        productId: product.product.productId, // Assuming productId is the _id of the product
         qty: product.qty,
         shippingPrice: product.shippingPrice,
         price: product.price,
@@ -79,7 +79,7 @@ export class SellerService {
       }));
 
       const sellerOrderData = {
-        orderRef: order._id,
+        orderId: order._id,
         merchantRef: merchantId,
         orderItems,
         totalPrice,

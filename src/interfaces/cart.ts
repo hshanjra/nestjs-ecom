@@ -1,8 +1,7 @@
-import * as mongoose from 'mongoose';
 /* Cart Blueprint */
 export interface cartItem {
   product: {
-    _id?: mongoose.Types.ObjectId;
+    productId?: string;
     productTitle: string;
     productSlug: string;
     productBrand: string;

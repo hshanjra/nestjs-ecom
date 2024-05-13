@@ -36,17 +36,13 @@ export class SellerController {
   @Auth(Role.SELLER)
   @UseInterceptors(FilesInterceptor('images'), ImagesInterceptor)
   async create(
-    @Body() createProductDto: CreateProductDto,
+    @Body() dto: CreateProductDto,
     @UploadedFiles() images: Express.Multer.File[],
     @Req() req: Request,
   ) {
     const merchantId = req.user.merchant._id;
 
-    return await this.productService.create(
-      createProductDto,
-      images,
-      merchantId,
-    );
+    return await this.productService.create(dto, images, merchantId);
   }
 
   @Get('products')

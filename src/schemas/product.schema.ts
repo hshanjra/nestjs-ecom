@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import slugify from 'slugify';
 import { Category } from './category.schema';
+import * as crypto from 'crypto';
 import {
   ICompatibility,
   IProductDimensions,
@@ -11,28 +12,32 @@ import {
 @Schema({ timestamps: true })
 export class Product {
   _id: mongoose.Types.ObjectId;
-  @Prop({ type: String, required: true, index: true })
+
+  @Prop({ type: String, unique: true, maxlength: 15 })
+  productId: string;
+
+  @Prop({ type: String, required: true, maxlength: 200 })
   productTitle: string;
 
-  @Prop({ type: String, index: true })
+  @Prop({ type: String, index: true, maxlength: 200 })
   productSlug: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, maxlength: 50 })
   productBrand: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, maxlength: 500 })
   shortDescription: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, maxlength: 1500 })
   longDescription: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, maxlength: 50 })
   keywords: string;
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: true, maxlength: 50 })
   partNumber: string;
 
-  @Prop({ type: String })
+  @Prop({ type: String, maxlength: 20 })
   sku: string;
 
   @Prop({
@@ -52,12 +57,18 @@ export class Product {
     ref: 'Category',
     required: true,
   })
-  productCategory: Category;
+  category: Category;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Category',
+  })
+  subCategory: Category;
 
   @Prop({ type: Number, required: true, default: 1 })
   productStock: number;
 
-  @Prop({ type: Number, required: false })
+  @Prop({ type: Number })
   limitOrder: number; //Sold Single product only-limit purchases to 1 item per order.
 
   @Prop({ type: Number })
@@ -150,4 +161,32 @@ ProductSchema.pre('save', async function (next) {
   next();
 });
 
-ProductSchema.index({ productSlug: 1 }, { unique: true });
+// Generate unique product identifier
+ProductSchema.pre('save', async function (next) {
+  if (!this.isNew) return next();
+
+  let isUnique = false;
+  const length = 10;
+
+  // Generating ids using cryptographic algorithms
+
+  const productId = crypto
+    .randomBytes(length)
+    .toString('hex')
+    .slice(0, length)
+    .toUpperCase();
+
+  // Example output: 'E4D1CBA2F3'
+
+  // Accessing the model via this.constructor
+  const ProductModel: mongoose.Model<Product> = this.constructor as any;
+
+  while (!isUnique) {
+    const existingProduct = await ProductModel.findOne({ productId }).exec();
+    isUnique = !existingProduct;
+  }
+
+  this.productId = productId;
+  next();
+});
+ProductSchema.index({ productSlug: 1, productId: 1 }, { unique: true });

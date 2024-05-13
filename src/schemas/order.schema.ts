@@ -21,9 +21,7 @@ export class Order {
         shippingPrice: Number,
         subTotal: { type: Number, required: true },
         product: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: 'Product',
-          required: true,
+          productId: String,
           productTitle: String,
           productSlug: String,
           productBrand: String,
@@ -39,6 +37,7 @@ export class Order {
   @Prop({
     required: true,
     type: {
+      _id: false,
       firstName: String,
       lastName: String,
       companyName: String,
@@ -54,6 +53,7 @@ export class Order {
 
   @Prop({
     type: {
+      _id: false,
       firstName: String,
       lastName: String,
       companyName: String,

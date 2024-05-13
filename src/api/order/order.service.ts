@@ -64,7 +64,7 @@ export class OrderService {
       case 'CARD':
         // Write code to charge stripe amount
         // _pi = await this.stripeService.chargeCard(order.totalPrice);
-        await this.sellerService.splitOrder(order._id);
+        // await this.sellerService.splitOrder(order._id);
         break;
 
       case 'PAYPAL':
@@ -138,8 +138,8 @@ export class OrderService {
 
     for (const itemId in cartItems) {
       const cartItem = cartItems[itemId];
-      const product = await this.productService.findActiveProductById(
-        cartItem.product._id,
+      const product = await this.productService.findActiveProductByProductId(
+        cartItem.product.productId,
       );
 
       if (!product) {
@@ -168,7 +168,7 @@ export class OrderService {
       shippingPrice: cartItem.shippingPrice,
       subTotal: cartItem.qty * product.salePrice,
       product: {
-        _id: product._id,
+        productId: product.productId,
         productTitle: product.productTitle,
         productSlug: product.productSlug,
         productBrand: product.productBrand,
@@ -201,7 +201,7 @@ export class OrderService {
   private async updateProductStocks(orderItems: OrderItem[]): Promise<void> {
     for (const orderItem of orderItems) {
       await this.productService.decreaseProductStock(
-        orderItem.product._id,
+        orderItem.product.productId,
         orderItem.qty,
       );
     }
