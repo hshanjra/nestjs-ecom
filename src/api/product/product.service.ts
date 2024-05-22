@@ -109,7 +109,7 @@ export class ProductService {
       .find({
         isActive: true,
       })
-      .populate('productCategory', 'categoryName categorySlug')
+      .populate('category', 'categoryName categorySlug')
       // .select('-merchantId -updatedAt -isActive -__v')
       .exec();
     if (!allProducts) throw new NotFoundException('No products found.');
