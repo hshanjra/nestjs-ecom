@@ -9,6 +9,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
 import { UsersModule } from '../users/users.module';
 import { PassportModule } from '@nestjs/passport';
+import { ResendMail } from 'src/utility/resend.util';
+import { TokensUtil } from 'src/utility/tokens.util';
+import * as fs from 'fs';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -20,8 +24,10 @@ import { PassportModule } from '@nestjs/passport';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
         return {
-          secret: config.get<string>('JWT_SECRET'),
+          privateKey: fs.readFileSync(join(process.cwd(), '.keys/private.pem')),
+          publicKey: fs.readFileSync(join(process.cwd(), '.keys/public.pem')),
           signOptions: {
+            algorithm: 'RS256',
             expiresIn: config.get<string | number>('JWT_EXPIRY') || '1d',
           },
         };
@@ -36,6 +42,6 @@ import { PassportModule } from '@nestjs/passport';
     UsersModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, ResendMail, TokensUtil],
 })
 export class AuthModule {}

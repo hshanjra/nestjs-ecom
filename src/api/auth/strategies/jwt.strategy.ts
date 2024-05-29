@@ -3,6 +3,8 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UsersService } from 'src/api/users/users.service';
 import { User } from 'src/schemas/user.schema';
+import * as fs from 'fs';
+import { join } from 'path';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,7 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         },
       ]),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET,
+      secretOrKey: fs.readFileSync(join(process.cwd(), '.keys/public.pem')),
     });
   }
   async validate(payload: any): Promise<User> {

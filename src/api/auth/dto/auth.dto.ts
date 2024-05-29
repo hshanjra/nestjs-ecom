@@ -36,6 +36,7 @@ export class SignUpDto {
   email: string;
 
   @IsPhoneNumber('US')
+  @IsOptional()
   phone: string;
 
   @IsOptional()

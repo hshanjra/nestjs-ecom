@@ -13,11 +13,11 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<User>,
     private sellerService: SellerService,
   ) {}
-  async findOneWithEmailOrUsername(username?: string) {
-    return await this.userModel.findOne({
-      $or: [{ email: username }, { username: username }],
-    });
-  }
+  // async findOneWithEmailOrUsername(username?: string) {
+  //   return await this.userModel.findOne({
+  //     $or: [{ email: username }, { username: username }],
+  //   });
+  // }
 
   async findUserWithEmail(email: string) {
     return await this.userModel.findOne({
@@ -31,12 +31,12 @@ export class UsersService {
     });
   }
 
-  async create(createUserDto: SignUpDto) {
+  async create(dto: SignUpDto, token?: string) {
     // const { firstName, lastName, email, phone, role, password } = createUserDto;
 
-    const newuser = await this.userModel.create(createUserDto);
+    const newuser = await this.userModel.create({ ...dto, verifyToken: token });
 
-    if (createUserDto.role === 'SELLER') {
+    if (dto.role === 'SELLER') {
       //merhchant profile
       const mp = await this.sellerService.create({ user: newuser._id });
       await this.userModel.findByIdAndUpdate(newuser._id, {
@@ -44,6 +44,7 @@ export class UsersService {
         merchant: mp._id,
       });
     }
+
     return newuser;
   }
 

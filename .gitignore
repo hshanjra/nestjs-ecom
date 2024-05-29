@@ -4,6 +4,9 @@
 /build
 uploads
 
+#keys
+.keys
+
 # Logs
 logs
 *.log

@@ -10,12 +10,16 @@ import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
 import { Request } from 'express';
 import { Role } from './enums';
+import { ResendMail } from 'src/utility/resend.util';
+import { TokensUtil } from 'src/utility/tokens.util';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private readonly resend: ResendMail,
+    private tokenUtil: TokensUtil,
   ) {}
 
   async validateUser(authPayload: AuthPayloadDto) {
@@ -53,12 +57,17 @@ export class AuthService {
     );
     if (existingUser)
       throw new HttpException('Email already in use.', HttpStatus.CONFLICT);
-    // existingUser = await this.usersService.findUserWithPhone(singUpDto.phone);
-    // if (existingUser)
-    //   throw new HttpException('User already exists with this phone.', 409);
+
+    // Generate verification token
+    const token = this.tokenUtil.generateEmailVerificationToken(
+      signUpDto.email,
+    );
 
     // Create the user
-    const newUser = await this.usersService.create(signUpDto);
+    const newUser = await this.usersService.create(signUpDto, token);
+
+    // Send verification email
+    await this.resend.sendVerificationEmail(signUpDto.email, token);
 
     // Generate JWT token payload
     const payload = this.generateJwtPayload(

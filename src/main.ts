@@ -5,8 +5,11 @@ import { MongoSessionStore } from './utility/store/mongo-session.store';
 import helmet from 'helmet';
 import * as session from 'express-session';
 import * as cookieParser from 'cookie-parser';
+import { generateKeysIfNotExist } from './keygen';
 
 async function bootstrap() {
+  // Generate JWT RSA Keys
+  generateKeysIfNotExist();
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
