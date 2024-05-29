@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -7,16 +8,20 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { AuthPayloadDto, SignUpDto } from './dto/auth.dto';
 import * as bcrypt from 'bcrypt';
-import { UsersService } from '../users/users.service';
 import { Request } from 'express';
 import { Role } from './enums';
 import { ResendMail } from 'src/utility/resend.util';
 import { TokensUtil } from 'src/utility/tokens.util';
+import { User } from 'src/schemas/user.schema';
+import { Model } from 'mongoose';
+import { InjectModel } from '@nestjs/mongoose';
+import { Merchant } from 'src/schemas/merchant.schema';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
+    @InjectModel(User.name) private userModel: Model<User>,
+    @InjectModel(Merchant.name) private merchantModel: Model<Merchant>,
     private jwtService: JwtService,
     private readonly resend: ResendMail,
     private tokenUtil: TokensUtil,
@@ -24,7 +29,7 @@ export class AuthService {
 
   async validateUser(authPayload: AuthPayloadDto) {
     // Find user with the provided email
-    const user = await this.usersService.findUserWithEmail(authPayload.email);
+    const user = await this.userModel.findOne({ email: authPayload.email });
     if (!user) {
       throw new HttpException(
         `User with email ${authPayload.email} not found`,
@@ -52,9 +57,9 @@ export class AuthService {
   }
 
   async signUp(signUpDto: SignUpDto) {
-    const existingUser = await this.usersService.findUserWithEmail(
-      signUpDto.email,
-    );
+    const existingUser = await this.userModel.findOne({
+      email: signUpDto.email,
+    });
     if (existingUser)
       throw new HttpException('Email already in use.', HttpStatus.CONFLICT);
 
@@ -63,18 +68,29 @@ export class AuthService {
       signUpDto.email,
     );
 
-    // Create the user
-    const newUser = await this.usersService.create(signUpDto, token);
+    const newuser = await this.userModel.create({
+      ...signUpDto,
+      verifyToken: token,
+    });
+
+    if (signUpDto.role === 'SELLER') {
+      //merhchant profile
+      const mp = await this.merchantModel.create({ user: newuser._id });
+      await this.userModel.findByIdAndUpdate(newuser._id, {
+        $push: { roles: Role.SELLER },
+        merchant: mp._id,
+      });
+    }
 
     // Send verification email
     await this.resend.sendVerificationEmail(signUpDto.email, token);
 
     // Generate JWT token payload
     const payload = this.generateJwtPayload(
-      newUser._id,
-      newUser.roles,
-      newUser.firstName,
-      newUser.lastName,
+      newuser._id,
+      newuser.roles,
+      newuser.firstName,
+      newuser.lastName,
     );
 
     // Sign and return JWT token
@@ -94,6 +110,30 @@ export class AuthService {
     }
 
     return permissions;
+  }
+
+  async verifyEmail(token: string) {
+    const email = this.tokenUtil.verifyEmailVerificationToken(token);
+    if (!email) throw new BadRequestException('Token is invalid or expired.');
+
+    const user = await this.userModel.findOne({
+      email: email,
+    });
+
+    if (!user) throw new BadRequestException('User does not exists.');
+
+    if (user.isEmailVerified)
+      throw new BadRequestException('Email is already verified.');
+
+    // Verify the email
+    await this.userModel.findOneAndUpdate(
+      { email: email },
+      {
+        isEmailVerified: true,
+        verifyToken: null,
+      },
+    );
+    return { message: 'Email verified successfully.' };
   }
 
   /* PRIVATE METHODS */

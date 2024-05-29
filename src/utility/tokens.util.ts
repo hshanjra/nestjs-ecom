@@ -17,7 +17,6 @@ export class TokensUtil {
       { email },
       this.config.get<string>('JWT_EMAIL_VERIFICATION_SECRET'),
       {
-        algorithm: 'RS256',
         expiresIn: '24h',
       },
     );

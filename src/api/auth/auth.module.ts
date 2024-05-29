@@ -13,6 +13,7 @@ import { ResendMail } from 'src/utility/resend.util';
 import { TokensUtil } from 'src/utility/tokens.util';
 import * as fs from 'fs';
 import { join } from 'path';
+import { Merchant, MerchantSchema } from 'src/schemas/merchant.schema';
 
 @Module({
   imports: [
@@ -37,6 +38,10 @@ import { join } from 'path';
       {
         name: User.name,
         schema: UserSchema,
+      },
+      {
+        name: Merchant.name,
+        schema: MerchantSchema,
       },
     ]),
     UsersModule,

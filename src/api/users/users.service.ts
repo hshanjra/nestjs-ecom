@@ -31,22 +31,22 @@ export class UsersService {
     });
   }
 
-  async create(dto: SignUpDto, token?: string) {
-    // const { firstName, lastName, email, phone, role, password } = createUserDto;
+  // async create(dto: SignUpDto, token?: string) {
+  //   // const { firstName, lastName, email, phone, role, password } = createUserDto;
 
-    const newuser = await this.userModel.create({ ...dto, verifyToken: token });
+  //   const newuser = await this.userModel.create({ ...dto, verifyToken: token });
 
-    if (dto.role === 'SELLER') {
-      //merhchant profile
-      const mp = await this.sellerService.create({ user: newuser._id });
-      await this.userModel.findByIdAndUpdate(newuser._id, {
-        $push: { roles: Role.SELLER },
-        merchant: mp._id,
-      });
-    }
+  //   if (dto.role === 'SELLER') {
+  //     //merhchant profile
+  //     const mp = await this.sellerService.create({ user: newuser._id });
+  //     await this.userModel.findByIdAndUpdate(newuser._id, {
+  //       $push: { roles: Role.SELLER },
+  //       merchant: mp._id,
+  //     });
+  //   }
 
-    return newuser;
-  }
+  //   return newuser;
+  // }
 
   findAll() {
     return `This action returns all users`;

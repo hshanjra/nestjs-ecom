@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Req,
   Res,
   UseGuards,
@@ -13,6 +14,7 @@ import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { AuthPayloadDto, SignUpDto } from './dto/auth.dto';
+import { TokenDto } from './dto/token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -54,6 +56,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   status(@Req() req: Request) {
     return this.authService.me(req);
+  }
+
+  @Post('verify-email')
+  @HttpCode(200)
+  async verifyEmail(@Query() dto: TokenDto) {
+    return this.authService.verifyEmail(dto.token);
   }
 
   /* PRIVATE METHODS */
