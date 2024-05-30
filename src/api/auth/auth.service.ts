@@ -147,6 +147,11 @@ export class AuthService {
     // Generate verification token
     const token = this.tokenUtil.generateEmailVerificationToken(email);
 
+    // Store verification token in the database
+    await this.userModel.findByIdAndUpdate(user._id, {
+      verifyToken: token,
+    });
+
     // Send verification email
     await this.resend.sendVerificationEmail(email, token);
 
