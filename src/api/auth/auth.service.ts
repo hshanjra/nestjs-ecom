@@ -1,8 +1,8 @@
 import {
   BadRequestException,
-  HttpException,
-  HttpStatus,
+  ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -30,12 +30,10 @@ export class AuthService {
   async validateUser(authPayload: AuthPayloadDto) {
     // Find user with the provided email
     const user = await this.userModel.findOne({ email: authPayload.email });
-    if (!user) {
-      throw new HttpException(
+    if (!user)
+      throw new NotFoundException(
         `User with email ${authPayload.email} not found`,
-        HttpStatus.NOT_FOUND,
       );
-    }
 
     // Check if the provided password matches the user's password
     const isPasswordMatched = await bcrypt.compare(
@@ -47,10 +45,10 @@ export class AuthService {
     }
 
     // Remove sensitive information from user object
-    const { _id, roles, firstName, lastName } = user;
+    const { _id, firstName, lastName } = user;
 
     // Generate JWT payload
-    const payload = this.generateJwtPayload(_id, roles, firstName, lastName);
+    const payload = this.generateJwtPayload(_id, firstName, lastName);
 
     // Generate and return access token
     return await this.jwtService.signAsync(payload);
@@ -60,8 +58,7 @@ export class AuthService {
     const existingUser = await this.userModel.findOne({
       email: signUpDto.email,
     });
-    if (existingUser)
-      throw new HttpException('Email already in use.', HttpStatus.CONFLICT);
+    if (existingUser) throw new ConflictException('Email already in use.');
 
     // Generate verification token
     const token = this.tokenUtil.generateEmailVerificationToken(
@@ -88,7 +85,6 @@ export class AuthService {
     // Generate JWT token payload
     const payload = this.generateJwtPayload(
       newuser._id,
-      newuser.roles,
       newuser.firstName,
       newuser.lastName,
     );
@@ -114,16 +110,16 @@ export class AuthService {
 
   async verifyEmail(token: string) {
     const email = this.tokenUtil.verifyEmailVerificationToken(token);
-    if (!email) throw new BadRequestException('Token is invalid or expired.');
 
     const user = await this.userModel.findOne({
       email: email,
+      verifyToken: token,
     });
 
-    if (!user) throw new BadRequestException('User does not exists.');
-
-    if (user.isEmailVerified)
+    if (user && user.isEmailVerified)
       throw new BadRequestException('Email is already verified.');
+
+    if (!user) throw new BadRequestException('Token is invalid or expired.');
 
     // Verify the email
     await this.userModel.findOneAndUpdate(
@@ -136,16 +132,69 @@ export class AuthService {
     return { message: 'Email verified successfully.' };
   }
 
+  async resendVerificationEmail(email: string) {
+    // find the user with email
+    const user = await this.userModel.findOne({
+      email: email,
+    });
+
+    if (!user) throw new NotFoundException();
+
+    // check the user if already verified
+    if (user.isEmailVerified)
+      throw new BadRequestException('Email is already verified.');
+
+    // Generate verification token
+    const token = this.tokenUtil.generateEmailVerificationToken(email);
+
+    // Send verification email
+    await this.resend.sendVerificationEmail(email, token);
+
+    return { message: 'Verification email sent.' };
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const user = await this.userModel.findOne({ email: email });
+
+    if (!user) throw new NotFoundException();
+
+    const token = this.tokenUtil.generatePasswordResetToken(email);
+
+    user.forgotPasswordToken = token;
+
+    // Send password reset email
+    await this.resend.sendPasswordResetEmail(email, token);
+
+    // Save the token in the database
+    await user.save();
+    return;
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const email = this.tokenUtil.verifyPasswordResetToken(token);
+
+    const user = await this.userModel.findOne({
+      email: email,
+      forgotPasswordToken: token,
+    });
+
+    if (!user) throw new BadRequestException('Token is invalid or expired.');
+    const salt = await bcrypt.genSalt(10);
+    const passHash = await bcrypt.hash(newPassword, salt);
+
+    // update the password
+    await this.userModel.findByIdAndUpdate(user._id, {
+      password: passHash,
+      forgotPasswordToken: null,
+    });
+
+    return { message: 'Password changed successfully.' };
+  }
+
   /* PRIVATE METHODS */
-  private generateJwtPayload(
-    _id: any,
-    roles: string[],
-    firstName: string,
-    lastName: string,
-  ) {
+  private generateJwtPayload(_id: any, firstName: string, lastName: string) {
     return {
       _id,
-      roles,
       fullName: `${firstName} ${lastName}`,
     };
   }

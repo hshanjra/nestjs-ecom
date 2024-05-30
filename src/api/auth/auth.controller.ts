@@ -14,7 +14,7 @@ import { AuthService } from './auth.service';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { AuthPayloadDto, SignUpDto } from './dto/auth.dto';
-import { TokenDto } from './dto/token.dto';
+import { EmailDto, ResetPasswordDto, TokenDto } from './dto/reset.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -62,6 +62,28 @@ export class AuthController {
   @HttpCode(200)
   async verifyEmail(@Query() dto: TokenDto) {
     return this.authService.verifyEmail(dto.token);
+  }
+
+  @Post('resend-verification-email')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(200)
+  async resendVerificationEmail(@Body() dto: EmailDto) {
+    return this.authService.resendVerificationEmail(dto.email);
+  }
+
+  @Post('request-password-reset')
+  @HttpCode(200)
+  async requestPasswordReset(@Body() dto: EmailDto) {
+    return this.authService.requestPasswordReset(dto.email);
+  }
+
+  @Post('reset-password')
+  @HttpCode(200)
+  async resetPassword(
+    @Query() tDto: TokenDto,
+    @Body() passDto: ResetPasswordDto,
+  ) {
+    return this.authService.resetPassword(tDto.token, passDto.newPassword);
   }
 
   /* PRIVATE METHODS */
