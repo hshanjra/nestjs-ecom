@@ -16,7 +16,7 @@ export class ResendMail {
         from: this.configService.get<string>('FROM_EMAIL'),
         to: email,
         subject: 'Verify Your Email',
-        html: `<a href="${this.configService.get<string>('FRONTEND_URL')}/verify-email?token=${token}">Verify Email</a>`,
+        html: `<a href="${this.configService.get<string>('FRONTEND_URL')}/account/verify-email?token=${token}">Verify Email</a>`,
       });
       console.log('verification email sent', email);
     } catch (error) {
@@ -34,7 +34,7 @@ export class ResendMail {
         from: this.configService.get<string>('FROM_EMAIL'),
         to: email,
         subject: 'Reset Your Password',
-        html: `<a href="${this.configService.get<string>('FRONTEND_URL')}/reset-password?token=${token}">Reset Password</a>`,
+        html: `<a href="${this.configService.get<string>('FRONTEND_URL')}/account/reset-password?token=${token}">Reset Password</a>`,
       });
       console.log('password reset email sent', email);
     } catch (error) {
