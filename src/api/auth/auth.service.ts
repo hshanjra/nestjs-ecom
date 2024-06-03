@@ -105,7 +105,14 @@ export class AuthService {
       permissions.verifiedSeller = merchant.isVerified;
     }
 
-    return permissions;
+    const user = {
+      firstName: req.user.firstName,
+      lastName: req.user.lastName,
+      email: req.user.email,
+      permissions: permissions,
+    };
+
+    return user;
   }
 
   async verifyEmail(token: string) {
