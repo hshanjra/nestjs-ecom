@@ -39,16 +39,26 @@ export class CartService {
     return session.cart;
   }
 
+  async create(session: Record<string, any>) {
+    if (!session.cart) {
+      return (session.cart = {
+        items: {},
+        totalQty: 0,
+        subTotal: 0,
+        tax: 0,
+        totalShippingPrice: 0,
+        totalAmount: 0,
+        stateCode: '',
+      });
+    }
+    return;
+  }
+
   async update(cartDto: CartDto, session: Record<string, any>) {
-    const cart: ICart = session.cart || {
-      items: {},
-      totalQty: 0,
-      subTotal: 0,
-      tax: 0,
-      totalShippingPrice: 0,
-      totalAmount: 0,
-      stateCode: '',
-    };
+    const cart: ICart = session.cart;
+    if (!cart) {
+      throw new BadRequestException('No cart found');
+    }
 
     const itemId = cartDto.productId;
     const itemQty = Number(cartDto.qty) || 1;

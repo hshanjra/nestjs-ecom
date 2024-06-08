@@ -15,6 +15,11 @@ export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Post()
+  createCart(@Session() session: Record<string, any>) {
+    return this.cartService.create(session);
+  }
+
+  @Post('/update')
   updateCart(@Body() dto: CartDto, @Session() session: Record<string, any>) {
     return this.cartService.update(dto, session);
   }
