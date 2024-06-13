@@ -109,6 +109,7 @@ export class ProductService {
       .find({
         isActive: true,
       })
+      .sort({ createdAt: -1 })
       .populate('category', 'categoryName categorySlug')
       // .select('-merchantId -updatedAt -isActive -__v')
       .exec();

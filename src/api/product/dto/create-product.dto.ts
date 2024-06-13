@@ -26,8 +26,8 @@ export class CreateProductDto {
   @IsString()
   keywords?: string;
 
-  @IsNumberString()
-  partNumber?: number;
+  @IsString()
+  partNumber?: string;
 
   @IsString()
   sku?: string;

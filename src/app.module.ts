@@ -13,6 +13,7 @@ import { CategoryModule } from './api/category/category.module';
 import { AdminsModule } from './api/admins/admins.module';
 import { CartModule } from './api/cart/cart.module';
 import { CouponsModule } from './api/coupons/coupons.module';
+import { CheckoutModule } from './api/checkout/checkout.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { CouponsModule } from './api/coupons/coupons.module';
     AdminsModule,
     CartModule,
     CouponsModule,
+    CheckoutModule,
   ],
   controllers: [],
   providers: [MongoSessionStore],

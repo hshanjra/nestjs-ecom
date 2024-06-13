@@ -6,7 +6,6 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 
 @Injectable()
 export class ImagesInterceptor implements NestInterceptor {
@@ -17,15 +16,7 @@ export class ImagesInterceptor implements NestInterceptor {
 
     this.validateImages(images);
 
-    return next.handle().pipe(
-      catchError((error) => {
-        // Handle any errors that occur during image validation
-        if (error instanceof BadRequestException) {
-          throw new BadRequestException(error.message);
-        }
-        throw error;
-      }),
-    );
+    return next.handle();
   }
 
   private validateImages(images: Express.Multer.File[]) {
