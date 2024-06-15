@@ -12,10 +12,15 @@ import { TaxRate, TaxRateSchema } from 'src/schemas/tax-rate.schema';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { Product, ProductSchema } from 'src/schemas/product.schema';
 import { ProductService } from '../product/product.service';
-import { StripeService } from 'src/utility/stripe/stripe.service';
 import { SellerService } from '../seller/seller.service';
 import { Merchant, MerchantSchema } from 'src/schemas/merchant.schema';
 import { Shipment, ShipmentSchema } from 'src/schemas/shipment.schema';
+import { CheckoutService } from '../checkout/checkout.service';
+import {
+  CheckoutSession,
+  CheckoutSessionSchema,
+} from 'src/schemas/checkout-session.schema';
+import { StripeService } from 'src/utility/stripe/stripe.service';
 
 @Module({
   imports: [
@@ -23,6 +28,10 @@ import { Shipment, ShipmentSchema } from 'src/schemas/shipment.schema';
       {
         name: Product.name,
         schema: ProductSchema,
+      },
+      {
+        name: CheckoutSession.name,
+        schema: CheckoutSessionSchema,
       },
       {
         name: SellerOrder.name,
@@ -55,8 +64,9 @@ import { Shipment, ShipmentSchema } from 'src/schemas/shipment.schema';
     OrderService,
     ProductService,
     CloudinaryService,
-    StripeService,
     SellerService,
+    CheckoutService,
+    StripeService,
   ],
 })
 export class OrderModule {}

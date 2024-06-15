@@ -55,7 +55,7 @@ class ShippingDetailsDto {
 export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
-  token: string;
+  sessionId: string;
 
   @ValidateNested({ each: true })
   @Type(() => ShippingDetailsDto)
@@ -70,7 +70,7 @@ export class CreateOrderDto {
   @IsOptional()
   shippingAddress: ShippingDetailsDto;
 
-  @IsNotEmpty()
-  @IsIn([PaymentMethod.CARD, PaymentMethod.PAYPAL])
-  paymentMethod: PaymentMethod;
+  // @IsNotEmpty()
+  // @IsIn([PaymentMethod.CARD, PaymentMethod.PAYPAL])
+  // paymentMethod: PaymentMethod;
 }

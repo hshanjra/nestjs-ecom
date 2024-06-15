@@ -32,6 +32,7 @@ declare global {
         isVerified: boolean;
         accountStatus: accountStatus;
       };
+      sCustId?: string;
     }
 
     interface Request {

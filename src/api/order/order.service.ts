@@ -15,8 +15,8 @@ import { TaxRate } from 'src/schemas/tax-rate.schema';
 import { OrderItem } from 'src/interfaces';
 import { Product } from 'src/schemas/product.schema';
 import { ProductService } from '../product/product.service';
-import { StripeService } from 'src/utility/stripe/stripe.service';
 import { SellerService } from '../seller/seller.service';
+import { CheckoutService } from '../checkout/checkout.service';
 
 @Injectable()
 export class OrderService {
@@ -24,13 +24,22 @@ export class OrderService {
     @InjectModel(TaxRate.name) private taxRateModel: Model<TaxRate>,
     @InjectModel(Order.name) private orderModel: Model<Order>,
     private productService: ProductService,
-    private stripeService: StripeService,
     private sellerService: SellerService,
+    private checkoutService: CheckoutService,
   ) {}
 
   /* CUSTOMER */
-  async create(dto: CreateOrderDto, session: any): Promise<Order> {
+  async create(dto: CreateOrderDto, globalSession: any): Promise<Order | any> {
     let order: Order;
+
+    const session = await this.checkoutService.getCheckoutSession(
+      dto.sessionId,
+    );
+
+    // TODO: remove the checkout session after order has been created
+
+    if (!session && !globalSession)
+      throw new BadRequestException('session not found');
 
     // Start a session on the Mongoose connection
     const mongooseSession = await this.orderModel.startSession();
@@ -58,24 +67,24 @@ export class OrderService {
       throw error;
     }
 
-    let _pi;
-    // check payment methods and generate tokens
-    switch (dto.paymentMethod) {
-      case 'CARD':
-        // Write code to charge stripe amount
-        // _pi = await this.stripeService.chargeCard(order.totalPrice);
-        await this.sellerService.splitOrder(order.orderId);
-        break;
+    // let _pi;
+    // // check payment methods and generate tokens
+    // switch (dto.paymentMethod) {
+    //   case 'CARD':
+    //     // Write code to charge stripe amount
+    //     // _pi = await this.stripeService.chargeCard(order.totalPrice);
+    //     await this.sellerService.splitOrder(order.orderId);
+    //     break;
 
-      case 'PAYPAL':
-        // Write code to charge paypal amount
-        break;
-    }
+    //   case 'PAYPAL':
+    //     // Write code to charge paypal amount
+    //     break;
+    // }
 
     // await this.splitOrder(order._id); // TODO: move this into a separate function where payment status is successful then split order
     this.clearCart(session);
 
-    return _pi;
+    return { success: 'Order placed' };
   }
 
   findAll() {
@@ -188,7 +197,7 @@ export class OrderService {
     return await this.orderModel.create({
       billingAddress: dto.billingAddress,
       shippingAddress: dto.shippingAddress,
-      paymentMethod: dto.paymentMethod,
+      paymentMethod: 'STRIPE',
       orderItems: orderItems,
       taxPrice: cart.tax,
       totalShippingPrice: cart.totalShippingPrice,

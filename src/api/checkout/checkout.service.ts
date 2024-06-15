@@ -21,13 +21,31 @@ export class CheckoutService {
   async createCheckoutSession(cart: ICart) {
     if (!cart) throw new BadRequestException('Cart is empty.');
 
-    const sid = 'cs_' + generateRandomString(78);
+    // // Retrieve the checkout session from the current session
+    // let checkoutSession;
 
-    const session = await this.checkoutSession.create({
+    // Check if the session is missing or expired
+    // if (!checkoutSession || new Date() > checkoutSession.expiresAt) {
+    //   // Generate a new unique session ID
+    //   const sessionId = await this.generateUniqueSessionId();
+
+    //   // Create a new checkout session
+    //   checkoutSession = await this.checkoutSession.create({
+    //     cart: cart,
+    //     sessionId: sessionId,
+    //   });
+    //   // Update the current session with the new checkout session
+    //   session.cs = checkoutSession;
+    // }
+    // Generate a new unique session ID
+    const sessionId = await this.generateUniqueSessionId();
+
+    // Create a new checkout session
+    const checkoutSession = await this.checkoutSession.create({
       cart: cart,
-      sessionId: sid,
+      sessionId: sessionId,
     });
-    return { sessionId: session.sessionId };
+    return { sessionId: checkoutSession.sessionId };
   }
 
   async validateCheckoutSession(sessionId: string, cart: ICart) {
@@ -36,14 +54,35 @@ export class CheckoutService {
       .findOne({ sessionId })
       .select('cart -_id');
 
-    if (
-      !session ||
-      new Date() > new Date(session.expiresAt) ||
-      session.isPaid
-    ) {
+    if (!session || new Date() > session.expiresAt || session.isPaid) {
       throw new NotFoundException('Invalid session');
     }
-    const pi = await this.stripeService.chargeCard(session.cart.totalAmount);
-    return { client_secret: pi.client_secret, cart: session.cart };
+    const pi = await this.stripeService.chargeCard(
+      session.cart.totalAmount,
+      // cart.items,
+    );
+    return {
+      client_secret: pi.client_secret,
+      intentId: pi.id,
+      cart: session.cart,
+    };
+  }
+
+  async getCheckoutSession(sessionId: string) {
+    return await this.checkoutSession.findOne({ sessionId: sessionId });
+  }
+
+  private async generateUniqueSessionId() {
+    let sessionId;
+    let existingSessionId;
+
+    do {
+      sessionId = 'cs_' + generateRandomString(78);
+      existingSessionId = await this.checkoutSession.findOne({
+        sessionId: sessionId,
+      });
+    } while (existingSessionId);
+
+    return sessionId;
   }
 }

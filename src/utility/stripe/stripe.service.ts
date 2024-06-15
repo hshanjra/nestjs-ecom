@@ -5,14 +5,21 @@ import Stripe from 'stripe';
 export class StripeService {
   private stripe: Stripe;
   constructor() {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {});
+    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2024-04-10',
+    });
   }
 
-  async chargeCard(amount: number): Promise<Stripe.PaymentIntent> {
+  async chargeCard(
+    amount: number,
+    user?: Express.User,
+  ): Promise<Stripe.PaymentIntent> {
     try {
       return await this.stripe.paymentIntents.create({
         amount: amount * 100, // in cents ($)
         currency: 'usd',
+        // metadata: { purchased_items: JSON.stringify(purchased_items) },
+        customer: user && user?.sCustId,
         automatic_payment_methods: { enabled: true },
       });
     } catch (error) {
