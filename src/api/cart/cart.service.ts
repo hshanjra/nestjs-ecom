@@ -169,7 +169,7 @@ export class CartService {
     cart.subTotal = subTotal;
     cart.tax = tax;
     cart.totalShippingPrice = totalShippingPrice;
-    cart.totalAmount = totalAmount;
+    cart.totalAmount = this.roundOff(totalAmount);
 
     // Update session with the modified cart
     session.cart = cart;
@@ -208,5 +208,9 @@ export class CartService {
   true if qty is greater than available qty. false if qty is less than available qty. */
   private checkExessQty(enteredQty: number, availableQty: number): boolean {
     return enteredQty > availableQty;
+  }
+
+  private roundOff(value: number) {
+    return Math.round(value);
   }
 }
