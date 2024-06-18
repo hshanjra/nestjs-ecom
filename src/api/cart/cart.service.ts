@@ -127,7 +127,7 @@ export class CartService {
     cart.subTotal = subtotal;
     cart.stateCode = stateCode;
     cart.tax = tax;
-    cart.totalAmount = total;
+    cart.totalAmount = this.roundOff(total);
 
     // Return updated cart
     return (session.cart = cart);
