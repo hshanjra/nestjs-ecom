@@ -16,7 +16,7 @@ export class StripeService {
   ): Promise<Stripe.PaymentIntent> {
     try {
       return await this.stripe.paymentIntents.create({
-        amount: amount * 100, // in cents ($)
+        amount: this.roundOff(amount) * 100, // in cents ($)
         currency: 'usd',
         // metadata: { purchased_items: JSON.stringify(purchased_items) },
         customer: user && user?.sCustId,
@@ -28,5 +28,9 @@ export class StripeService {
         'Something went wrong while processing payment.',
       );
     }
+  }
+
+  private roundOff(value: number) {
+    return Math.round(value);
   }
 }
