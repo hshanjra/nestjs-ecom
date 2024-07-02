@@ -7,6 +7,7 @@ import {
   CheckoutSessionSchema,
 } from 'src/schemas/checkout-session.schema';
 import { StripeService } from 'src/utility/stripe/stripe.service';
+import { TaxRate, TaxRateSchema } from 'src/schemas/tax-rate.schema';
 
 @Module({
   imports: [
@@ -14,6 +15,10 @@ import { StripeService } from 'src/utility/stripe/stripe.service';
       {
         name: CheckoutSession.name,
         schema: CheckoutSessionSchema,
+      },
+      {
+        name: TaxRate.name,
+        schema: TaxRateSchema,
       },
     ]),
   ],

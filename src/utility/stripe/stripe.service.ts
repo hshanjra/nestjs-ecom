@@ -16,11 +16,12 @@ export class StripeService {
   ): Promise<Stripe.PaymentIntent> {
     try {
       return await this.stripe.paymentIntents.create({
-        amount: this.roundOff(amount) * 100, // in cents ($)
+        amount: this.fixAmount(amount), // in cents ($)
         currency: 'usd',
         // metadata: { purchased_items: JSON.stringify(purchased_items) },
         customer: user && user?.sCustId,
         automatic_payment_methods: { enabled: true },
+        // payment_method_types: ['card', 'paypal'],
       });
     } catch (error) {
       console.log(error);
@@ -30,7 +31,8 @@ export class StripeService {
     }
   }
 
-  private roundOff(value: number) {
-    return Math.round(value);
+  /* This function round off the amount and returns in cents */
+  private fixAmount(value: number): number {
+    return Math.round(value * 100);
   }
 }

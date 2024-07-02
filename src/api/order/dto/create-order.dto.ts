@@ -22,11 +22,11 @@ class ShippingDetailsDto {
   lastName: string;
 
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   companyName: string;
 
-  @IsNotEmpty()
+  // @IsNotEmpty()
+  @IsOptional()
   @IsPhoneNumber('US')
   phone: number;
 
@@ -48,14 +48,17 @@ class ShippingDetailsDto {
   zipCode: string;
 
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   country: string;
 }
 
 export class CreateOrderDto {
   @IsString()
-  @IsNotEmpty()
+  // @IsNotEmpty()
   sessionId: string;
+
+  @IsString()
+  paymentId: string;
 
   @ValidateNested({ each: true })
   @Type(() => ShippingDetailsDto)
@@ -70,7 +73,7 @@ export class CreateOrderDto {
   @IsOptional()
   shippingAddress: ShippingDetailsDto;
 
-  // @IsNotEmpty()
-  // @IsIn([PaymentMethod.CARD, PaymentMethod.PAYPAL])
-  // paymentMethod: PaymentMethod;
+  @IsNotEmpty()
+  @IsIn([PaymentMethod.CARD, PaymentMethod.PAYPAL, PaymentMethod.STRIPE])
+  paymentMethod: PaymentMethod;
 }

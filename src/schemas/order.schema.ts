@@ -6,13 +6,11 @@ import { OrderStatus, paymentResponse } from 'src/api/order/enums';
 
 @Schema({ timestamps: true })
 export class Order {
-  _id: string;
-
   @Prop({ type: String, unique: true })
   orderId: string;
   // customer id could be blank if user is not logged in i.e. guest checkout
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  customerRef: User;
+  userId: User;
 
   @Prop({
     required: true,
@@ -49,7 +47,7 @@ export class Order {
       city: String,
       state: String,
       zipCode: String,
-      country: String,
+      country: { type: String, default: 'US' },
     },
   })
   billingAddress: IAddress;
@@ -65,7 +63,7 @@ export class Order {
       city: String,
       state: String,
       zipCode: String,
-      country: String,
+      country: { type: String, default: 'US' },
     },
   })
   shippingAddress: IAddress;
@@ -75,6 +73,7 @@ export class Order {
 
   @Prop({
     type: {
+      _id: false,
       txnId: { type: String, default: null },
       status: {
         type: String,
@@ -109,7 +108,14 @@ export class Order {
 
   @Prop({ type: String, max: 250 })
   orderNotes: string;
+
+  @Prop({ type: Boolean, default: false })
+  isPaid: boolean;
+
+  @Prop({ type: Date, default: null })
+  paidAt: string;
 }
+
 export const OrderSchema = SchemaFactory.createForClass(Order);
 OrderSchema.index({ orderId: 1 }, { unique: true });
 
@@ -176,6 +182,12 @@ export class SellerOrder {
     default: OrderStatus.ORDER_PLACED,
   })
   orderStatus: OrderStatus;
+
+  @Prop({ type: Boolean, default: false })
+  isDelivered: boolean;
+
+  @Prop({ type: Date, default: null })
+  deliveredAt: string;
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,

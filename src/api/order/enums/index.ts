@@ -23,6 +23,7 @@ export enum paymentResponse {
 }
 
 export enum PaymentMethod {
+  STRIPE = 'STRIPE',
   CARD = 'CARD',
   PAYPAL = 'PAYPAL',
 }

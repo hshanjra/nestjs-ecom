@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,6 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ICart } from 'src/interfaces/cart';
 import { CheckoutSession } from 'src/schemas/checkout-session.schema';
+import { TaxRate } from 'src/schemas/tax-rate.schema';
 import generateRandomString from 'src/utility/generateRandomString.util';
 import { StripeService } from 'src/utility/stripe/stripe.service';
 
@@ -18,34 +20,43 @@ export class CheckoutService {
     private stripeService: StripeService,
   ) {}
 
-  async createCheckoutSession(cart: ICart) {
+  async createCheckoutSession(
+    cart: ICart,
+    globalSession: any,
+    user: Express.User,
+  ) {
     if (!cart) throw new BadRequestException('Cart is empty.');
 
-    // // Retrieve the checkout session from the current session
-    // let checkoutSession;
+    // Retrieve the checkout session from the current session
+    const checkoutSessionId = globalSession.cs;
+    let checkoutSession;
 
-    // Check if the session is missing or expired
-    // if (!checkoutSession || new Date() > checkoutSession.expiresAt) {
-    //   // Generate a new unique session ID
-    //   const sessionId = await this.generateUniqueSessionId();
+    if (!checkoutSessionId) {
+      // checkoutSessionId = await this.generateUniqueSessionId();
+      checkoutSession = await this.createNewCheckoutSession(cart, user);
+    } else {
+      checkoutSession = await this.updateCheckoutSession(
+        cart,
+        checkoutSessionId,
+      );
+    }
 
-    //   // Create a new checkout session
-    //   checkoutSession = await this.checkoutSession.create({
-    //     cart: cart,
-    //     sessionId: sessionId,
-    //   });
-    //   // Update the current session with the new checkout session
-    //   session.cs = checkoutSession;
-    // }
-    // Generate a new unique session ID
-    const sessionId = await this.generateUniqueSessionId();
+    const paymentIntent = await this.stripeService.chargeCard(
+      checkoutSession.cart.totalAmount,
+    );
 
-    // Create a new checkout session
-    const checkoutSession = await this.checkoutSession.create({
-      cart: cart,
-      sessionId: sessionId,
-    });
-    return { sessionId: checkoutSession.sessionId };
+    const payload = {
+      clientSecret: paymentIntent.client_secret,
+      sessionId: checkoutSession._id,
+      cart: checkoutSession.cart,
+      intentId: paymentIntent.id,
+    };
+
+    if (!globalSession.cs) {
+      globalSession.cs = checkoutSession._id;
+    }
+
+    return payload;
   }
 
   async validateCheckoutSession(sessionId: string, cart: ICart) {
@@ -69,8 +80,10 @@ export class CheckoutService {
   }
 
   async getCheckoutSession(sessionId: string) {
-    return await this.checkoutSession.findOne({ sessionId: sessionId });
+    return await this.checkoutSession.findOne({ _id: sessionId });
   }
+
+  // async updateStateCode(checkoutSessionId: string, stateCode: string) {}
 
   private async generateUniqueSessionId() {
     let sessionId;
@@ -85,4 +98,39 @@ export class CheckoutService {
 
     return sessionId;
   }
+
+  private async createNewCheckoutSession(cart: ICart, user: Express.User) {
+    return await this.checkoutSession.create({ cart, user });
+  }
+
+  private async updateCheckoutSession(cart: ICart, sessionId: string) {
+    return await this.checkoutSession.findOneAndUpdate({
+      sessionId,
+      cart,
+    });
+  }
+
+  // Function to calculate tax for an order
+  // private async calcTax(subTotal: number, stateCode: string): Promise<number> {
+  //   try {
+  //     // Perform a case-insensitive search for the tax rate by state code
+  //     const taxData = await this.taxRateModel.findOne({
+  //       stateCode: new RegExp(`^${stateCode}$`, 'i'), // Ensures exact match, case-insensitive
+  //     });
+
+  //     if (!taxData) {
+  //       console.log(`No tax data found for state: ${stateCode}`);
+  //       return 0;
+  //     }
+
+  //     // Calculate tax amount directly from the order total
+  //     const taxAmount = (subTotal * taxData.taxRate) / 100;
+
+  //     // Round tax amount to 2 decimal places
+  //     return Math.round(taxAmount * 100) / 100;
+  //   } catch (error) {
+  //     console.error('Failed to calculate tax:', error);
+  //     throw new HttpException('Unable to calculate tax amount.', 502);
+  //   }
+  // }
 }

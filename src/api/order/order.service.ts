@@ -29,7 +29,11 @@ export class OrderService {
   ) {}
 
   /* CUSTOMER */
-  async create(dto: CreateOrderDto, globalSession: any): Promise<Order | any> {
+  async create(
+    dto: CreateOrderDto,
+    globalSession: any,
+    user: Express.User,
+  ): Promise<Order | any> {
     let order: Order;
 
     const session = await this.checkoutService.getCheckoutSession(
@@ -51,7 +55,7 @@ export class OrderService {
       const cart: ICart = session.cart;
       const orderItems: OrderItem[] = await this.processCartItems(cart.items);
 
-      order = await this.createOrderRecord(dto, cart, orderItems);
+      order = await this.createOrderRecord(dto, cart, orderItems, user._id);
       await this.updateProductStocks(orderItems);
 
       await mongooseSession.commitTransaction();
@@ -84,15 +88,23 @@ export class OrderService {
     // await this.splitOrder(order._id); // TODO: move this into a separate function where payment status is successful then split order
     this.clearCart(session);
 
-    return { success: 'Order placed' };
+    return { success: 'Order placed', order: order };
   }
 
   findAll() {
     return `This action returns all order`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
+  async findOne(orderId: string, user: Express.User) {
+    const order = await this.orderModel
+      .findOne({
+        userId: user._id,
+        orderId: orderId,
+      })
+      .exec();
+    // TODO: remove sensitive fields
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
   }
 
   update(id: number, updateOrderDto: UpdateOrderDto) {
@@ -193,11 +205,16 @@ export class OrderService {
     dto: CreateOrderDto,
     cart: ICart,
     orderItems: OrderItem[],
+    userId: string,
   ): Promise<Order> {
     return await this.orderModel.create({
+      userId: userId,
+      paymentResponse: {
+        txnId: dto.paymentId,
+      },
+      paymentMethod: dto.paymentMethod,
       billingAddress: dto.billingAddress,
       shippingAddress: dto.shippingAddress,
-      paymentMethod: 'STRIPE',
       orderItems: orderItems,
       taxPrice: cart.tax,
       totalShippingPrice: cart.totalShippingPrice,
