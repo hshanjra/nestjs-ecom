@@ -133,7 +133,7 @@ export class StripeService {
           console.log(`Unhandled event type ${event.type}`);
       }
 
-      return;
+      return event;
     } catch (error) {
       console.error(`Webhook Error: ${error}`);
       return new BadRequestException(`Webhook Error: ${error.message}`);
