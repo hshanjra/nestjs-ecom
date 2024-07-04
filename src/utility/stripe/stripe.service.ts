@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   Injectable,
-  RawBodyRequest,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -75,16 +74,12 @@ export class StripeService {
     }
   }
 
-  async handleWebhook(
-    signature: string,
-    req: RawBodyRequest<Request>,
-    res: Response,
-  ) {
+  async handleWebhook(signature: string, req: Request, res: Response) {
     if (!signature) new BadRequestException('Invalid signature');
     let event: Stripe.Event;
     try {
       event = this.stripe.webhooks.constructEvent(
-        req.rawBody,
+        req.body,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET,
       );

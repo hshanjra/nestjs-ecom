@@ -10,9 +10,7 @@ import { generateKeysIfNotExist } from './keygen';
 async function bootstrap() {
   // Generate JWT RSA Keys
   generateKeysIfNotExist();
-  const app = await NestFactory.create<INestApplication>(AppModule, {
-    rawBody: true,
-  });
+  const app = await NestFactory.create<INestApplication>(AppModule);
 
   app.enableCors({
     origin: '*',
