@@ -79,9 +79,13 @@ export class StripeService {
 
     if (!signature) new BadRequestException('Invalid signature');
 
+    console.log('Raw Body:', rawBody);
+
+    console.log('Body', request.body);
+
     try {
       const event = this.stripe.webhooks.constructEvent(
-        request.body,
+        JSON.stringify(request.body),
         signature,
         process.env.STRIPE_WEBHOOK_SECRET,
       );
