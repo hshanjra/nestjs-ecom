@@ -80,6 +80,7 @@ export class Order {
         enum: paymentResponse,
         default: paymentResponse.PAYMENT_OPEN,
       },
+      responseData: { type: Object, default: null },
     },
   })
   paymentResponse: IPaymentResponse;

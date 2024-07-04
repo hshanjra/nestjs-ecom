@@ -20,6 +20,7 @@ export enum paymentResponse {
   PAYMENT_OPEN = 'PAYMENT_OPEN', //this response will be used when payment is initiated but not confirmed.
   PAYMENT_SUCCESS = 'PAYMENT_SUCCESS',
   PAYMENT_FAILED = 'PAYMENT_FAILED',
+  PAYMENT_CANCELED = 'PAYMENT_CANCELED',
 }
 
 export enum PaymentMethod {
