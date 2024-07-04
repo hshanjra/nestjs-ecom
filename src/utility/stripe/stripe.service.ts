@@ -74,18 +74,16 @@ export class StripeService {
     }
   }
 
-  async handleWebhook(request: Request, rawBody: any) {
+  async handleWebhook(request: Request) {
     const signature = request.headers['stripe-signature'];
+
+    console.log(signature);
 
     if (!signature) new BadRequestException('Invalid signature');
 
-    console.log('Raw Body:', rawBody);
-
-    console.log('Body', request.body);
-
     try {
       const event = this.stripe.webhooks.constructEvent(
-        JSON.stringify(request.body),
+        JSON.stringify(request.body, null, 2),
         signature,
         process.env.STRIPE_WEBHOOK_SECRET,
       );
