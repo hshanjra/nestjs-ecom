@@ -103,8 +103,10 @@ export class StripeService {
       case 'payment_intent.canceled':
         const paymentIntentCanceled = event.data.object;
         // Then define and call a function to handle the event payment_intent.canceled
-        await this.orderModel.findByIdAndUpdate(
-          paymentIntentCanceled.metadata.orderId,
+        await this.orderModel.findOneAndUpdate(
+          {
+            orderId: paymentIntentCanceled.metadata.orderId,
+          },
           {
             paymentResponse: {
               status: paymentResponse.PAYMENT_CANCELED,
@@ -116,8 +118,10 @@ export class StripeService {
 
       case 'payment_intent.payment_failed':
         const paymentIntentPaymentFailed = event.data.object;
-        await this.orderModel.findByIdAndUpdate(
-          paymentIntentPaymentFailed.metadata.orderId,
+        await this.orderModel.findOneAndUpdate(
+          {
+            orderId: paymentIntentPaymentFailed.metadata.orderId,
+          },
           {
             paymentResponse: {
               status: paymentResponse.PAYMENT_FAILED,
@@ -128,8 +132,10 @@ export class StripeService {
         break;
       case 'payment_intent.succeeded':
         const paymentIntentSucceeded = event.data.object;
-        await this.orderModel.findByIdAndUpdate(
-          paymentIntentSucceeded.metadata.orderId,
+        await this.orderModel.findOneAndUpdate(
+          {
+            orderId: paymentIntentSucceeded.metadata.orderId,
+          },
           {
             isPaid: true,
             paidAt: paymentIntentSucceeded.created,
