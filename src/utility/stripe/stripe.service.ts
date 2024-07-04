@@ -79,7 +79,7 @@ export class StripeService {
     let event: Stripe.Event;
     try {
       event = this.stripe.webhooks.constructEvent(
-        req.body,
+        JSON.stringify(req.body, null, 2),
         signature,
         process.env.STRIPE_WEBHOOK_SECRET,
       );
