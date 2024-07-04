@@ -1,10 +1,11 @@
 import {
   BadRequestException,
   Injectable,
+  RawBodyRequest,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { Model } from 'mongoose';
 import { paymentResponse } from 'src/api/order/enums';
 import { Order } from 'src/schemas/order.schema';
@@ -74,72 +75,78 @@ export class StripeService {
     }
   }
 
-  async handleWebhook(request: Request) {
-    const signature = request.headers['stripe-signature'];
-
-    console.log(signature);
-
+  async handleWebhook(
+    signature: string,
+    req: RawBodyRequest<Request>,
+    res: Response,
+  ) {
     if (!signature) new BadRequestException('Invalid signature');
-
+    let event: Stripe.Event;
     try {
-      const event = this.stripe.webhooks.constructEvent(
-        JSON.stringify(request.body, null, 2),
+      event = this.stripe.webhooks.constructEvent(
+        req.rawBody,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET,
       );
-
-      // Handle the event
-      switch (event.type) {
-        case 'payment_intent.canceled':
-          const paymentIntentCanceled = event.data.object;
-          // Then define and call a function to handle the event payment_intent.canceled
-          await this.orderModel.findByIdAndUpdate(
-            paymentIntentCanceled.metadata.orderId,
-            {
-              paymentResponse: {
-                status: paymentResponse.PAYMENT_CANCELED,
-                responseData: paymentIntentCanceled,
-              },
-            },
-          );
-          break;
-
-        case 'payment_intent.payment_failed':
-          const paymentIntentPaymentFailed = event.data.object;
-          await this.orderModel.findByIdAndUpdate(
-            paymentIntentPaymentFailed.metadata.orderId,
-            {
-              paymentResponse: {
-                status: paymentResponse.PAYMENT_FAILED,
-                responseData: paymentIntentPaymentFailed,
-              },
-            },
-          );
-          break;
-        case 'payment_intent.succeeded':
-          const paymentIntentSucceeded = event.data.object;
-          await this.orderModel.findByIdAndUpdate(
-            paymentIntentSucceeded.metadata.orderId,
-            {
-              isPaid: true,
-              paidAt: paymentIntentSucceeded.created,
-              paymentResponse: {
-                status: paymentResponse.PAYMENT_SUCCESS,
-                responseData: paymentIntentSucceeded,
-              },
-            },
-          );
-          break;
-
-        default:
-          console.log(`Unhandled event type ${event.type}`);
-      }
-
-      return event;
-    } catch (error) {
-      console.error(`Webhook Error: ${error}`);
-      throw new BadRequestException(`Webhook Error: ${error.message}`);
+    } catch (err) {
+      // On error, log and return the error message
+      console.log(`❌ Error message: ${err.message}`);
+      res.status(400).send(`Webhook Error: ${err.message}`);
+      return;
     }
+
+    // Successfully constructed event
+    console.log('✅ Success:', event.id);
+
+    // Handle the event
+    switch (event.type) {
+      case 'payment_intent.canceled':
+        const paymentIntentCanceled = event.data.object;
+        // Then define and call a function to handle the event payment_intent.canceled
+        await this.orderModel.findByIdAndUpdate(
+          paymentIntentCanceled.metadata.orderId,
+          {
+            paymentResponse: {
+              status: paymentResponse.PAYMENT_CANCELED,
+              responseData: paymentIntentCanceled,
+            },
+          },
+        );
+        break;
+
+      case 'payment_intent.payment_failed':
+        const paymentIntentPaymentFailed = event.data.object;
+        await this.orderModel.findByIdAndUpdate(
+          paymentIntentPaymentFailed.metadata.orderId,
+          {
+            paymentResponse: {
+              status: paymentResponse.PAYMENT_FAILED,
+              responseData: paymentIntentPaymentFailed,
+            },
+          },
+        );
+        break;
+      case 'payment_intent.succeeded':
+        const paymentIntentSucceeded = event.data.object;
+        await this.orderModel.findByIdAndUpdate(
+          paymentIntentSucceeded.metadata.orderId,
+          {
+            isPaid: true,
+            paidAt: paymentIntentSucceeded.created,
+            paymentResponse: {
+              status: paymentResponse.PAYMENT_SUCCESS,
+              responseData: paymentIntentSucceeded,
+            },
+          },
+        );
+        break;
+
+      default:
+        console.warn(`🤷‍♀️ Unhandled event type: ${event.type}`);
+    }
+
+    // Return a response to acknowledge receipt of the event
+    res.status(200).json({ received: true });
   }
 
   /* This function round off the amount and returns in cents */

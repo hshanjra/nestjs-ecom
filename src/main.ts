@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { MongoSessionStore } from './utility/store/mongo-session.store';
 import helmet from 'helmet';
 import * as session from 'express-session';
@@ -10,7 +10,9 @@ import { generateKeysIfNotExist } from './keygen';
 async function bootstrap() {
   // Generate JWT RSA Keys
   generateKeysIfNotExist();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<INestApplication>(AppModule, {
+    rawBody: true,
+  });
 
   app.enableCors({
     origin: '*',

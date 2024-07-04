@@ -1,6 +1,14 @@
-import { Controller, Header, HttpCode, Post, Req } from '@nestjs/common';
+import {
+  Controller,
+  Headers,
+  HttpCode,
+  Post,
+  RawBodyRequest,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { StripeService } from './stripe.service';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 
 @Controller('/webhooks/stripe')
 export class StripeController {
@@ -8,8 +16,12 @@ export class StripeController {
 
   @Post()
   @HttpCode(200)
-  @Header('Cache-Control', 'none')
-  async webhook(@Req() request: Request) {
-    return await this.stripeService.handleWebhook(request);
+  // @Header('Cache-Control', 'none')
+  async webhook(
+    @Headers('stripe-signature') sig: string,
+    @Req() req: RawBodyRequest<Request>,
+    @Res() res: Response,
+  ) {
+    return await this.stripeService.handleWebhook(sig, req, res);
   }
 }
