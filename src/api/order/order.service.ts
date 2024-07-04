@@ -17,6 +17,7 @@ import { Product } from 'src/schemas/product.schema';
 import { ProductService } from '../product/product.service';
 import { SellerService } from '../seller/seller.service';
 import { CheckoutService } from '../checkout/checkout.service';
+import { StripeService } from 'src/utility/stripe/stripe.service';
 
 @Injectable()
 export class OrderService {
@@ -26,6 +27,7 @@ export class OrderService {
     private productService: ProductService,
     private sellerService: SellerService,
     private checkoutService: CheckoutService,
+    private stripeService: StripeService,
   ) {}
 
   /* CUSTOMER */
@@ -58,6 +60,21 @@ export class OrderService {
       order = await this.createOrderRecord(dto, cart, orderItems, user._id);
       await this.updateProductStocks(orderItems);
 
+      // Update payment intent
+      if (order.paymentMethod === 'STRIPE') {
+        const metadata = {
+          orderId: order.orderId,
+          // purchased_items: order.orderItems,
+        };
+
+        await this.stripeService.updatePaymentIntent(
+          order.paymentResponse.txnId,
+          metadata,
+          dto.shippingAddress,
+          // user.email,
+        );
+      }
+
       await mongooseSession.commitTransaction();
     } catch (error) {
       // TODO: move this into webhook
@@ -86,9 +103,13 @@ export class OrderService {
     // }
 
     // await this.splitOrder(order._id); // TODO: move this into a separate function where payment status is successful then split order
+
     this.clearCart(session);
 
-    return { success: 'Order placed', order: order };
+    return {
+      success: 'Order placed',
+      order: order,
+    };
   }
 
   findAll() {
