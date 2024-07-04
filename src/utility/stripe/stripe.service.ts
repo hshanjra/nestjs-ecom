@@ -81,7 +81,7 @@ export class StripeService {
 
     try {
       const event = this.stripe.webhooks.constructEvent(
-        rawBody,
+        request.body,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET,
       );
@@ -136,7 +136,7 @@ export class StripeService {
       return event;
     } catch (error) {
       console.error(`Webhook Error: ${error}`);
-      return new BadRequestException(`Webhook Error: ${error.message}`);
+      throw new BadRequestException(`Webhook Error: ${error.message}`);
     }
   }
 
