@@ -22,6 +22,7 @@ export class StripeController {
     @Req() req: RawBodyRequest<Request>,
     @Res() res: Response,
   ) {
+    console.log(req);
     return await this.stripeService.handleWebhook(sig, req, res);
   }
 }
