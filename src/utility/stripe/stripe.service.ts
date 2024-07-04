@@ -88,6 +88,64 @@ export class StripeService {
         signature,
         process.env.STRIPE_WEBHOOK_SECRET,
       );
+
+      // Handle the event
+      switch (event.type) {
+        case 'payment_intent.canceled':
+          const paymentIntentCanceled =
+            await this.stripe.paymentIntents.retrieve(event.data.object.id);
+          await this.orderModel.findOneAndUpdate(
+            {
+              orderId: paymentIntentCanceled.metadata.orderId,
+            },
+            {
+              paymentResponse: {
+                status: paymentResponse.PAYMENT_CANCELED,
+                responseData: paymentIntentCanceled,
+              },
+            },
+          );
+          break;
+
+        case 'payment_intent.payment_failed':
+          const paymentIntentPaymentFailed =
+            await this.stripe.paymentIntents.retrieve(event.data.object.id);
+          await this.orderModel.findOneAndUpdate(
+            {
+              orderId: paymentIntentPaymentFailed.metadata.orderId,
+            },
+            {
+              paymentResponse: {
+                status: paymentResponse.PAYMENT_FAILED,
+                responseData: paymentIntentPaymentFailed,
+              },
+            },
+          );
+          break;
+        case 'payment_intent.succeeded':
+          const paymentIntentSucceeded =
+            await this.stripe.paymentIntents.retrieve(event.data.object.id);
+          const pi = await this.stripe.paymentIntents.retrieve(
+            paymentIntentSucceeded.id,
+          );
+          await this.orderModel.findOneAndUpdate(
+            {
+              orderId: pi.metadata.orderId,
+            },
+            {
+              isPaid: true,
+              paidAt: paymentIntentSucceeded.created,
+              paymentResponse: {
+                status: paymentResponse.PAYMENT_SUCCESS,
+                responseData: paymentIntentSucceeded,
+              },
+            },
+          );
+          break;
+
+        default:
+          console.warn(`🤷‍♀️ Unhandled event type: ${event.type}`);
+      }
     } catch (err) {
       // On error, log and return the error message
       console.log(`❌ Error message: ${err.message}`);
@@ -97,65 +155,6 @@ export class StripeService {
 
     // Successfully constructed event
     console.log('✅ Success:', event.id);
-
-    // Handle the event
-    switch (event.type) {
-      case 'payment_intent.canceled':
-        const paymentIntentCanceled = await this.stripe.paymentIntents.retrieve(
-          event.data.object.id,
-        );
-        await this.orderModel.findOneAndUpdate(
-          {
-            orderId: paymentIntentCanceled.metadata.orderId,
-          },
-          {
-            paymentResponse: {
-              status: paymentResponse.PAYMENT_CANCELED,
-              responseData: paymentIntentCanceled,
-            },
-          },
-        );
-        break;
-
-      case 'payment_intent.payment_failed':
-        const paymentIntentPaymentFailed =
-          await this.stripe.paymentIntents.retrieve(event.data.object.id);
-        await this.orderModel.findOneAndUpdate(
-          {
-            orderId: paymentIntentPaymentFailed.metadata.orderId,
-          },
-          {
-            paymentResponse: {
-              status: paymentResponse.PAYMENT_FAILED,
-              responseData: paymentIntentPaymentFailed,
-            },
-          },
-        );
-        break;
-      case 'payment_intent.succeeded':
-        const paymentIntentSucceeded =
-          await this.stripe.paymentIntents.retrieve(event.data.object.id);
-        const pi = await this.stripe.paymentIntents.retrieve(
-          paymentIntentSucceeded.id,
-        );
-        await this.orderModel.findOneAndUpdate(
-          {
-            orderId: pi.metadata.orderId,
-          },
-          {
-            isPaid: true,
-            paidAt: paymentIntentSucceeded.created,
-            paymentResponse: {
-              status: paymentResponse.PAYMENT_SUCCESS,
-              responseData: paymentIntentSucceeded,
-            },
-          },
-        );
-        break;
-
-      default:
-        console.warn(`🤷‍♀️ Unhandled event type: ${event.type}`);
-    }
 
     // Return a response to acknowledge receipt of the event
     res.status(200).json({ received: true });
