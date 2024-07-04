@@ -132,6 +132,7 @@ export class StripeService {
         break;
       case 'payment_intent.succeeded':
         const paymentIntentSucceeded = event.data.object;
+        console.log(paymentIntentSucceeded);
         await this.orderModel.findOneAndUpdate(
           {
             orderId: paymentIntentSucceeded.metadata.orderId,
