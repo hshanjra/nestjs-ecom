@@ -18,6 +18,7 @@ import { ProductService } from '../product/product.service';
 import { SellerService } from '../seller/seller.service';
 import { CheckoutService } from '../checkout/checkout.service';
 import { StripeService } from 'src/utility/stripe/stripe.service';
+import Stripe from 'stripe';
 
 @Injectable()
 export class OrderService {
@@ -60,20 +61,20 @@ export class OrderService {
       order = await this.createOrderRecord(dto, cart, orderItems, user._id);
       await this.updateProductStocks(orderItems);
 
-      // Update payment intent
-      if (order.paymentMethod === 'STRIPE') {
-        const metadata = {
-          orderId: order.orderId,
-          // purchased_items: order.orderItems,
-        };
+      // // Update payment intent
+      // if (order.paymentMethod === 'STRIPE') {
+      //   const metadata = {
+      //     orderId: order.orderId,
+      //     // purchased_items: order.orderItems,
+      //   };
 
-        await this.stripeService.updatePaymentIntent(
-          order.paymentResponse.txnId,
-          metadata,
-          dto.shippingAddress,
-          // user.email,
-        );
-      }
+      //   await this.stripeService.updatePaymentIntent(
+      //     order.paymentResponse.txnId,
+      //     metadata,
+      //     dto.shippingAddress,
+      //     // user.email,
+      //   );
+      // }
 
       await mongooseSession.commitTransaction();
     } catch (error) {
@@ -88,27 +89,40 @@ export class OrderService {
       throw error;
     }
 
-    // let _pi;
-    // // check payment methods and generate tokens
-    // switch (dto.paymentMethod) {
-    //   case 'CARD':
-    //     // Write code to charge stripe amount
-    //     // _pi = await this.stripeService.chargeCard(order.totalPrice);
-    //     await this.sellerService.splitOrder(order.orderId);
-    //     break;
-
-    //   case 'PAYPAL':
-    //     // Write code to charge paypal amount
-    //     break;
-    // }
-
     // await this.splitOrder(order._id); // TODO: move this into a separate function where payment status is successful then split order
+
+    // If payment method is "CARD" then create payment intent
+    let pi: Stripe.PaymentIntent;
+
+    switch (dto.paymentMethod) {
+      case 'CARD':
+        const metadata = {
+          orderId: order.orderId,
+        };
+
+        pi = await this.stripeService.chargeCard(
+          order.totalPrice,
+          user,
+          metadata,
+          dto.shippingAddress,
+          dto.billingAddress,
+        );
+        break;
+
+      case 'PAYPAL':
+        console.log('handle paypal payments');
+        break;
+
+      default:
+        throw new HttpException('Payment method not supported', 400);
+    }
 
     this.clearCart(session);
 
     return {
       success: 'Order placed',
       order: order,
+      clientSecret: pi.client_secret,
     };
   }
 
@@ -230,9 +244,10 @@ export class OrderService {
   ): Promise<Order> {
     return await this.orderModel.create({
       userId: userId,
-      paymentResponse: {
-        txnId: dto.paymentId,
-      },
+      // TODO: update payment response on payment success
+      // paymentResponse: {
+      //   txnId: dto.paymentId,
+      // },
       paymentMethod: dto.paymentMethod,
       billingAddress: dto.billingAddress,
       shippingAddress: dto.shippingAddress,

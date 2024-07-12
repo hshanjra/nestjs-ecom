@@ -23,15 +23,43 @@ export class StripeService {
   async chargeCard(
     amount: number,
     user?: Express.User,
+    metadata?: any,
+    shippingAddress?: any,
+    billingAddress?: any,
   ): Promise<Stripe.PaymentIntent> {
     try {
       return await this.stripe.paymentIntents.create({
         amount: this.fixAmount(amount), // in cents ($)
         currency: 'usd',
+        metadata: metadata,
         receipt_email: user?.email,
         customer: user && user?.sCustId,
         automatic_payment_methods: { enabled: true },
-        // payment_method_types: ['card', 'paypal'],
+        // payment_method_data: {
+        //   billing_details: {
+        //     name: `${billingAddress?.firstName} ${billingAddress?.lastName}`,
+        //     address: {
+        //       line1: billingAddress?.streetAddress || '',
+        //       state: billingAddress?.state || '',
+        //       city: billingAddress?.city || '',
+        //       postal_code: billingAddress?.zipCode || '',
+        //       country: billingAddress?.country || '',
+        //     },
+        //     phone: billingAddress?.phone || '',
+        //   },
+        //   metadata: metadata,
+        // },
+        shipping: {
+          name: `${shippingAddress?.firstName} ${shippingAddress?.lastName}`,
+          address: {
+            line1: shippingAddress?.streetAddress || '',
+            state: shippingAddress?.state || '',
+            city: shippingAddress?.city || '',
+            postal_code: shippingAddress?.zipCode || '',
+            country: shippingAddress?.country || '',
+          },
+          phone: shippingAddress?.phone || '',
+        },
       });
     } catch (error) {
       console.log(error);

@@ -58,6 +58,7 @@ export class CreateOrderDto {
   sessionId: string;
 
   @IsString()
+  @IsOptional()
   paymentId: string;
 
   @ValidateNested({ each: true })

@@ -41,15 +41,9 @@ export class CheckoutService {
       );
     }
 
-    const paymentIntent = await this.stripeService.chargeCard(
-      checkoutSession.cart.totalAmount,
-    );
-
     const payload = {
-      clientSecret: paymentIntent.client_secret,
       sessionId: checkoutSession._id,
       cart: checkoutSession.cart,
-      intentId: paymentIntent.id,
     };
 
     if (!globalSession.cs) {
