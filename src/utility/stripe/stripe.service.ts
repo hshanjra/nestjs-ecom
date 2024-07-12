@@ -155,6 +155,7 @@ export class StripeService {
           const pi = await this.stripe.paymentIntents.retrieve(
             paymentIntentSucceeded.id,
           );
+          // TODO: split order into vendors
           await this.orderModel.findOneAndUpdate(
             {
               orderId: pi.metadata.orderId,
