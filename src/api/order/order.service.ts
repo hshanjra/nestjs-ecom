@@ -105,7 +105,6 @@ export class OrderService {
           user,
           metadata,
           dto.shippingAddress,
-          dto.billingAddress,
         );
         break;
 

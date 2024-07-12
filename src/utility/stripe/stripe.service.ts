@@ -25,7 +25,6 @@ export class StripeService {
     user?: Express.User,
     metadata?: any,
     shippingAddress?: any,
-    billingAddress?: any,
   ): Promise<Stripe.PaymentIntent> {
     try {
       return await this.stripe.paymentIntents.create({
