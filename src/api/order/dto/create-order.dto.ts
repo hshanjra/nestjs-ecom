@@ -25,11 +25,6 @@ class ShippingDetailsDto {
   @IsOptional()
   companyName: string;
 
-  // @IsNotEmpty()
-  @IsOptional()
-  @IsPhoneNumber('US')
-  phone: number;
-
   @IsString()
   @IsNotEmpty()
   streetAddress: string;
@@ -66,6 +61,16 @@ export class CreateOrderDto {
   @IsObject()
   @IsNotEmptyObject()
   billingAddress: ShippingDetailsDto;
+
+  // @IsNotEmpty()
+  @IsOptional()
+  @IsPhoneNumber('US', { message: 'Invalid phone number' })
+  billingPhone: number;
+
+  // @IsNotEmpty()
+  @IsOptional()
+  @IsPhoneNumber('US', { message: 'Invalid phone number' })
+  shippingPhone: number;
 
   @ValidateNested({ each: true })
   @Type(() => ShippingDetailsDto)
