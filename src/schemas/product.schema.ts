@@ -107,6 +107,9 @@ export class Product {
   isActive: boolean;
 
   @Prop({ type: Boolean, default: false })
+  onSale: boolean;
+
+  @Prop({ type: Boolean, default: false })
   isUniversal: boolean;
 
   @Prop({ type: Number, default: 0 })

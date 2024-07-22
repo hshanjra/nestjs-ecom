@@ -3,15 +3,11 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Product } from 'src/schemas/product.schema';
-import { Model } from 'mongoose';
+import { Model, MongooseQueryOptions } from 'mongoose';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { ProductImage } from 'src/interfaces';
 import { CompatiblePartsQuery } from './dto/compatible-query.dto';
-
-interface paginateArgs {
-  page: number;
-  pageSize: number;
-}
+import { ProductQueryDto } from './dto/product-query.dto';
 
 @Injectable()
 export class ProductService {
@@ -39,7 +35,7 @@ export class ProductService {
     return await this.productModel.create(productDetails);
   }
 
-  // Upate product
+  // Update product
   async updateSellerProduct(
     slug: string,
     dto: UpdateProductDto,
@@ -103,18 +99,124 @@ export class ProductService {
       .select('-merchantId -isActive -isFeaturedProduct');
   }
 
-  async findAll() {
-    //TODO: add pagination and offset
-    const allProducts = await this.productModel
-      .find({
-        isActive: true,
-      })
-      .sort({ createdAt: -1 })
-      .populate('category', 'categoryName categorySlug')
-      // .select('-merchantId -updatedAt -isActive -__v')
+  async findAll(qry: ProductQueryDto) {
+    // TODO: make, model, year filter pending
+    let options: MongooseQueryOptions = {};
+
+    if (qry.q) {
+      options = {
+        $or: [
+          { productTitle: new RegExp(qry.q, 'i') },
+          { productSlug: new RegExp(qry.q, 'i') },
+          { partNumber: new RegExp(qry.q, 'i') },
+          { description: new RegExp(qry.q, 'i') },
+          { shortDescription: new RegExp(qry.q, 'i') },
+          { productBrand: new RegExp(qry.q, 'i') },
+        ],
+      };
+    }
+
+    const query = this.productModel.find({ ...options, isActive: true });
+
+    // Sorting
+    if (qry.sort) {
+      switch (qry.sort) {
+        case 'price-asc':
+          query.sort({ salePrice: 1 });
+          break;
+        case 'price-desc':
+          query.sort({ salePrice: -1 });
+          break;
+        case 'popular':
+          query.sort({ salesCount: -1 });
+          break;
+
+        case 'asc':
+          query.sort({ createdAt: -1 });
+          break;
+
+        case 'desc':
+          query.sort({ createdAt: 1 });
+          break;
+
+        case 'none':
+          query.sort({ createdAt: -1 });
+          break;
+
+        default:
+          query.sort({ createdAt: -1 });
+          break;
+      }
+    }
+
+    // Price Range
+    if ((parseInt(qry.minPrice) && parseInt(qry.maxPrice)) >= 0) {
+      const minPrice = Math.min(parseInt(qry.minPrice), parseInt(qry.maxPrice));
+      const maxPrice = Math.max(parseInt(qry.minPrice), parseInt(qry.maxPrice));
+      query.where('salePrice').gte(minPrice).lte(maxPrice);
+    }
+
+    // Brand Filter
+    if (qry.brand) {
+      const brands = qry.brand.split(',');
+      query.where('productBrand').in(brands);
+    }
+
+    // Status Filter
+    if (qry.status) {
+      switch (qry.status) {
+        case 'inStock':
+          query.where('productStock').gt(0);
+          break;
+        case 'onSale':
+          query.where('onSale', true);
+          break;
+        case 'outOfStock':
+          query.where('productStock').lte(0);
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Condition Filter
+    if (qry.condition) {
+      const cond = qry.condition.toUpperCase().split(',');
+      if (cond.includes('NEW') || cond.includes('USED')) {
+        query.where('productCondition').in(cond);
+      }
+    }
+
+    // Featured
+    if (qry.featured === ('true' as any)) {
+      query.where('isFeaturedProduct', true);
+    }
+
+    // const allProducts = await this.productModel
+    //   .find({
+    //     isActive: true,
+    //   })
+    //   .limit(Number(query?.limit) || 4)
+    //   .sort({ createdAt: -1 })
+    //   .populate('category', 'categoryName categorySlug')
+    //   // .select('-merchantId -updatedAt -isActive -__v')
+    //   .exec();
+
+    const page: number = parseInt(qry?.page) || 1;
+    // max limit is 100
+    const limit: number =
+      qry.limit && parseInt(qry?.limit) <= 100 ? parseInt(qry?.limit) : 50;
+    const skip: number = (page - 1) * limit;
+
+    const totalCount = await this.productModel.countDocuments(query);
+    const products = await query
+      .limit(limit)
+      .select('-merchantId -updatedAt -isActive -__v')
+      .skip(skip)
       .exec();
-    if (!allProducts) throw new NotFoundException('No products found.');
-    return allProducts;
+
+    if (!products) throw new NotFoundException('No products found.');
+    return { products: products, totalCount: totalCount };
   }
 
   async findOne(slug: string) {
