@@ -15,7 +15,7 @@ ENV NIXPACKS_PATH=/app/node_modules/.bin:$NIXPACKS_PATH
 COPY . /app/.
 
 # Run npm ci with increased memory limit and cache mount with a key prefix
-RUN --mount=type=cache,id=npm-cache,target=/root/.npm node --max-old-space-size=4096 /usr/local/bin/npm ci --verbose
+RUN --mount=type=cache,id=s/b5a1c4fc-b0fb-4984-9d70-4bde14acfc60-/root/npm,target=/root/.npm node --max-old-space-size=4096 /usr/local/bin/npm ci --verbose
 
 # Build the application with increased memory limit
 RUN node --max-old-space-size=4096 /usr/local/bin/npm run build
