@@ -103,6 +103,7 @@ export class ProductService {
     // TODO: make, model, year filter pending
     let options: MongooseQueryOptions = {};
 
+    // Search Query
     if (qry.q) {
       options = {
         $or: [
