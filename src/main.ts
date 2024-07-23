@@ -6,13 +6,21 @@ import helmet from 'helmet';
 import * as session from 'express-session';
 import * as cookieParser from 'cookie-parser';
 import { generateKeysIfNotExist } from './keygen';
+import * as express from 'express';
+import { ExpressAdapter } from '@nestjs/platform-express';
 
 async function bootstrap() {
   // Generate JWT RSA Keys
   generateKeysIfNotExist();
-  const app = await NestFactory.create<INestApplication>(AppModule, {
-    rawBody: true,
-  });
+
+  const server = express();
+  const app = await NestFactory.create<INestApplication>(
+    AppModule,
+    new ExpressAdapter(server),
+    {
+      rawBody: true,
+    },
+  );
 
   app.enableCors({
     origin: '*',
@@ -48,6 +56,7 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(process.env.PORT);
+  // await app.listen(process.env.PORT);
+  await app.init();
 }
 bootstrap();
