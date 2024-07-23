@@ -151,10 +151,14 @@ export class ProductService {
     }
 
     // Price Range
-    if ((parseInt(qry.minPrice) && parseInt(qry.maxPrice)) >= 0) {
-      const minPrice = Math.min(parseInt(qry.minPrice), parseInt(qry.maxPrice));
-      const maxPrice = Math.max(parseInt(qry.minPrice), parseInt(qry.maxPrice));
-      query.where('salePrice').gte(minPrice).lte(maxPrice);
+    const minPrice = Number(qry.minPrice) || 0; // Default to 0 if not provided
+    const maxPrice = Number(qry.maxPrice) || Infinity; // Default to Infinity if not provided
+
+    // Apply query if maxPrice is greater than 0 and minPrice is >= 0
+    if (maxPrice > 0 && minPrice >= 0) {
+      const effectiveMinPrice = Math.min(minPrice, maxPrice);
+      const effectiveMaxPrice = Math.max(minPrice, maxPrice);
+      query.where('salePrice').gte(effectiveMinPrice).lte(effectiveMaxPrice);
     }
 
     // Brand Filter
