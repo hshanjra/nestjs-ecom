@@ -1,5 +1,5 @@
 # Use an official Node.js runtime as a parent image
-FROM node:21
+FROM node:18-alpine
 
 # Set the working directory
 WORKDIR /app
@@ -14,7 +14,7 @@ ENV NIXPACKS_PATH=/app/node_modules/.bin:$NIXPACKS_PATH
 # Copy the rest of the application code
 COPY . /app/.
 
-# Run npm ci with increased memory limit and cache mount
+# Run npm ci with increased memory limit and cache mount with a key prefix
 RUN --mount=type=cache,id=npm-cache,target=/root/.npm node --max-old-space-size=4096 /usr/local/bin/npm ci --verbose
 
 # Build the application with increased memory limit
