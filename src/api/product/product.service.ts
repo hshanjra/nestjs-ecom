@@ -133,11 +133,11 @@ export class ProductService {
           break;
 
         case 'asc':
-          query.sort({ createdAt: -1 });
+          query.sort({ createdAt: 1 });
           break;
 
         case 'desc':
-          query.sort({ createdAt: 1 });
+          query.sort({ createdAt: -1 });
           break;
 
         case 'none':
