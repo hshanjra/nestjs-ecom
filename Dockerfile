@@ -8,16 +8,16 @@ WORKDIR /app
 COPY package*.json ./
 RUN node --max-old-space-size=4096 /usr/local/bin/npm install
 
-# Set environment variables
+# Set environment variables with the correct format
 ENV NIXPACKS_PATH=/app/node_modules/.bin:$NIXPACKS_PATH
 
 # Copy the rest of the application code
 COPY . /app/.
 
 # Run npm ci with increased memory limit and cache mount
-RUN --mount=type=cache,id=s/b5a1c4fc-b0fb-4984-9d70-4bde14acfc60-/root/npm,target=/root/.npm node --max-old-space-size=4096 /usr/local/bin/npm ci --verbose
+RUN --mount=type=cache,id=npm-cache,target=/root/.npm node --max-old-space-size=4096 /usr/local/bin/npm ci --verbose
 
-# Build the application
+# Build the application with increased memory limit
 RUN node --max-old-space-size=4096 /usr/local/bin/npm run build
 
 # Expose the port the app runs on
