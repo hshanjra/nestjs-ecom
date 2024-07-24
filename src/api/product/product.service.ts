@@ -107,12 +107,12 @@ export class ProductService {
     if (qry.q) {
       options = {
         $or: [
-          { productTitle: new RegExp(qry.q, 'i') },
-          { productSlug: new RegExp(qry.q, 'i') },
-          { partNumber: new RegExp(qry.q, 'i') },
-          { description: new RegExp(qry.q, 'i') },
-          { shortDescription: new RegExp(qry.q, 'i') },
-          { productBrand: new RegExp(qry.q, 'i') },
+          { productTitle: { $regex: qry.q, $options: 'i' } },
+          { productSlug: { $regex: qry.q, $options: 'i' } },
+          { partNumber: { $regex: qry.q, $options: 'i' } },
+          { description: { $regex: qry.q, $options: 'i' } },
+          { shortDescription: { $regex: qry.q, $options: 'i' } },
+          { productBrand: { $regex: qry.q, $options: 'i' } },
         ],
       };
     }

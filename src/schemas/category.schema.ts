@@ -63,10 +63,10 @@ CategorySchema.virtual('isRoot').get(function () {
   return !this.parent;
 });
 
-CategorySchema.set('toJSON', {
-  virtuals: true,
-  versionKey: false,
-  transform: (doc, ret) => {
-    delete ret._id;
-  },
-});
+// CategorySchema.set('toJSON', {
+//   virtuals: true,
+//   versionKey: false,
+//   transform: (doc, ret) => {
+//     delete ret._id;
+//   },
+// });
