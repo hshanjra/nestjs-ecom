@@ -122,11 +122,11 @@ export class Product {
     index: true,
     _id: false,
     type: {
-      vehicleMake: { type: String, required: true },
-      vehicleModel: [{ type: String, required: true }],
+      vehicleMake: { type: String },
+      vehicleModel: [{ type: String }],
       vehicleSubmodel: [{ type: String }],
       vehicleEngine: [{ type: String }],
-      vehicleYear: [{ type: Number, required: true }],
+      vehicleYear: [{ type: Number }],
     },
   })
   compatibleWith: ICompatibility;
