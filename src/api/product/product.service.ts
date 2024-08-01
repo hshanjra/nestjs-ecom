@@ -116,6 +116,7 @@ export class ProductService {
           { description: { $regex: qry.q, $options: 'i' } },
           { shortDescription: { $regex: qry.q, $options: 'i' } },
           { productBrand: { $regex: qry.q, $options: 'i' } },
+          { productId: { $regex: qry.q, $options: 'i' } },
         ],
       };
     }
