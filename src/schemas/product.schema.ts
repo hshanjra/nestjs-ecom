@@ -25,6 +25,12 @@ export class Product {
   @Prop({ type: String, required: true, maxlength: 50 })
   productBrand: string;
 
+  @Prop({ type: String, maxlength: 60 })
+  metaTitle: string;
+
+  @Prop({ type: String, maxlength: 160 })
+  metaDescription: string;
+
   @Prop({ type: String, required: true, maxlength: 500 })
   shortDescription: string;
 
@@ -50,22 +56,22 @@ export class Product {
       weight: Number,
     },
   })
-  productDimensions: IProductDimensions; // values can be entered in milimeters
+  productDimensions: IProductDimensions; // values can be entered in millimeters
 
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',
     required: true,
   })
-  category: Category;
+  categoryId: Category;
 
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
-  })
-  subCategory: Category;
+  // @Prop({
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'Category',
+  // })
+  // subCategory: Category;
 
-  @Prop({ type: Number, required: true, default: 1 })
+  @Prop({ type: Number, required: true, default: 1, min: 0, max: 100 })
   productStock: number;
 
   @Prop({ type: Number })
@@ -114,6 +120,9 @@ export class Product {
 
   @Prop({ type: Number, default: 0 })
   salesCount: number;
+
+  @Prop({ type: Number, default: 0 })
+  numReviews: number;
 
   @Prop({ type: Number, default: 0 })
   addedToCartCount: number;

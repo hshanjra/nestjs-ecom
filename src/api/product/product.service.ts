@@ -8,11 +8,13 @@ import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { ProductImage } from 'src/interfaces';
 import { CompatiblePartsQuery } from './dto/compatible-query.dto';
 import { ProductQueryDto } from './dto/product-query.dto';
+import { Category } from 'src/schemas/category.schema';
 
 @Injectable()
 export class ProductService {
   constructor(
     @InjectModel(Product.name) private productModel: Model<Product>,
+    @InjectModel(Category.name) private categoryModel: Model<Category>,
     private cloudinaryService: CloudinaryService,
   ) {}
 
@@ -90,12 +92,13 @@ export class ProductService {
     return await this.productModel
       .findOne({ productId: productId, isActive: true })
       .select('-merchant -isActive -isFeaturedProduct -_id')
-      .populate('category', '-_id -createdAt -updatedAt -__v');
+      .populate('categoryId', '-_id -createdAt -updatedAt -__v');
   }
 
   async findActiveProductBySlug(slug: string): Promise<Product> {
     return await this.productModel
       .findOne({ productSlug: slug, isActive: true })
+      .populate('categoryId', 'categoryName categorySlug')
       .select('-merchantId -isActive -isFeaturedProduct');
   }
 
@@ -147,6 +150,22 @@ export class ProductService {
         default:
           query.sort({ createdAt: -1 });
           break;
+      }
+    }
+
+    // Category Filter
+    if (qry.category) {
+      const category = await this.categoryModel
+        .findOne({ categorySlug: qry.category })
+        .exec();
+
+      if (category) {
+        // TODO: return products with passed category only
+        const categories = await this.categoryModel
+          .find({ $or: [{ _id: category._id }, { parent: category._id }] })
+          .exec();
+        const categoryIds = categories.map((category) => category._id);
+        query.where('categoryId').in(categoryIds);
       }
     }
 
@@ -217,6 +236,7 @@ export class ProductService {
     const products = await query
       .limit(limit)
       .select('-merchantId -updatedAt -isActive -__v')
+      // .populate('categoryId', 'categoryName categorySlug')
       .skip(skip)
       .exec();
 
@@ -227,27 +247,47 @@ export class ProductService {
   async findOne(slug: string) {
     const getSingle = await this.productModel
       .findOne({ productSlug: slug, isActive: true })
-      .select('-merchantId -updatedAt -isActive -__v');
+      .populate('categoryId', 'categoryName categorySlug')
+      // .populate('merchant', 'merchantName merchantSlug')
+      .select('-merchantId -updatedAt -isActive -__v')
+      .exec();
 
     if (!getSingle) throw new NotFoundException('Product not found.');
     return getSingle;
+  }
+
+  async getProductsByCategory(slug: string): Promise<Product[]> {
+    const category = await this.categoryModel.findOne({ slug }).exec();
+    if (!category) {
+      return [];
+    }
+
+    const categories = await this.categoryModel
+      .find({ $or: [{ _id: category._id }, { parent: category._id }] })
+      .exec();
+    const categoryIds = categories.map((category) => category._id);
+
+    return await this.productModel
+      .find({ category: { $in: categoryIds } })
+      .populate('category')
+      .exec();
   }
 
   async findHotSelling() {
     return 'This will handle the hot selling products';
   }
 
-  async findFeatured() {
-    const featuredProducts = await this.productModel
-      .find({
-        isActive: true,
-        isFeaturedProduct: true,
-      })
-      .limit(20);
-    if (!featuredProducts.length)
-      throw new NotFoundException('No featured products');
-    return featuredProducts;
-  }
+  // async findFeatured() {
+  //   const featuredProducts = await this.productModel
+  //     .find({
+  //       isActive: true,
+  //       isFeaturedProduct: true,
+  //     })
+  //     .limit(20);
+  //   if (!featuredProducts.length)
+  //     throw new NotFoundException('No featured products');
+  //   return featuredProducts;
+  // }
 
   async findCompatibleParts(query: CompatiblePartsQuery) {
     // TODO: use pagination and offset

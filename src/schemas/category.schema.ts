@@ -4,12 +4,15 @@ import slugify from 'slugify';
 
 @Schema({
   timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true },
+  // toJSON: { virtuals: true },
+  // toObject: { virtuals: true },
 })
 export class Category {
   @Prop({ type: String, required: true })
   categoryName: string;
+
+  @Prop({ type: String })
+  categoryIcon: string;
 
   @Prop({ type: String, index: true })
   categorySlug: string;
@@ -22,16 +25,16 @@ export class Category {
     ref: 'Category',
     default: null,
   })
-  parent: Category;
+  parent?: Category;
 
   @Prop({ type: String })
   categoryThumbnail: string;
 
-  @Prop({
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Category',
-  })
-  subCategory: Category;
+  // @Prop({
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'Category',
+  // })
+  // subCategory: Category;
 }
 export const CategorySchema = SchemaFactory.createForClass(Category);
 
@@ -59,9 +62,9 @@ CategorySchema.pre('save', async function (next) {
 
 CategorySchema.index({ categorySlug: 1 }, { unique: true });
 
-CategorySchema.virtual('isRoot').get(function () {
-  return !this.parent;
-});
+// CategorySchema.virtual('isRoot').get(function () {
+//   return !this.parent;
+// });
 
 // CategorySchema.set('toJSON', {
 //   virtuals: true,

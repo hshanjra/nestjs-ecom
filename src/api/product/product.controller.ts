@@ -12,15 +12,20 @@ export class ProductController {
     return this.productService.findAll(query);
   }
 
+  @Get('category/:slug')
+  async getProductsByCategory(@Param('slug') slug: string) {
+    return await this.productService.getProductsByCategory(slug);
+  }
+
   @Get('hot-selling')
   findHotSelling() {
     return this.productService.findHotSelling();
   }
 
-  @Get('featured')
-  findFeatured() {
-    return this.productService.findFeatured();
-  }
+  // @Get('featured')
+  // findFeatured() {
+  //   return this.productService.findFeatured();
+  // }
 
   //Compatibility Parts Filtering
   @Get('compatibility-filter')

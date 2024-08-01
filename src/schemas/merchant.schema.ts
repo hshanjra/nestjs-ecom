@@ -15,13 +15,13 @@ export class Merchant {
   user: User;
 
   @Prop({ type: String })
-  bussinessName: string;
+  businessName: string;
 
   @Prop({ type: String })
-  bussinessLicense: string;
+  businessLicense: string;
 
   @Prop({ type: Date })
-  bussinessLicenseExp: Date;
+  businessLicenseExp: Date;
 
   @Prop({
     type: {
@@ -31,7 +31,7 @@ export class Merchant {
       zipCode: String,
     },
   })
-  bussinessAddress: Record<string, any>;
+  businessAddress: Record<string, any>;
 
   @Prop({ type: String })
   displayName: string;
@@ -43,10 +43,10 @@ export class Merchant {
   merchantRating: number;
 
   //   @Prop({ index: true, trim: true, lowercase: true })
-  //   bussinessEmail: string;
+  //   businessEmail: string;
 
   //   @Prop({ min: 10, trim: true })
-  //   bussinessPhone: number;
+  //   businessPhone: number;
 
   //   @Prop({ type: Boolean, default: false })
   //   isEmailVerified: boolean;

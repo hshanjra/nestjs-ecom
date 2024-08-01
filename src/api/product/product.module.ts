@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Product, ProductSchema } from 'src/schemas/product.schema';
 import { MulterModule } from '@nestjs/platform-express';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
+import { Category, CategorySchema } from 'src/schemas/category.schema';
 
 @Module({
   imports: [
@@ -18,6 +19,10 @@ import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
       {
         name: Product.name,
         schema: ProductSchema,
+      },
+      {
+        name: Category.name,
+        schema: CategorySchema,
       },
     ]),
   ],

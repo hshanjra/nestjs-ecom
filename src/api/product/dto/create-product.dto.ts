@@ -5,7 +5,9 @@ import {
   IsNotEmpty,
   IsNumberString,
   IsOptional,
+  IsPositive,
   IsString,
+  MaxLength,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -16,6 +18,16 @@ export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
   productBrand: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(60)
+  metaTitle: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(160)
+  metaDescription: string;
 
   @IsString()
   shortDescription?: string;
@@ -46,15 +58,17 @@ export class CreateProductDto {
 
   @IsString()
   @IsNotEmpty()
-  category: string;
+  categoryId: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @IsOptional()
-  subCategory: string;
+  // @IsString()
+  // @IsNotEmpty()
+  // @IsOptional()
+  // subCategory: string;
 
   @IsNumberString()
   @IsNotEmpty()
+  @IsPositive()
+  @MaxLength(100)
   productStock: number;
 
   @IsNumberString()

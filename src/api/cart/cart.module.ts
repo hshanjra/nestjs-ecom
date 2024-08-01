@@ -7,6 +7,7 @@ import { Cart, CartSchema } from 'src/schemas/cart.schema';
 import { TaxRate, TaxRateSchema } from 'src/schemas/tax-rate.schema';
 import { CloudinaryService } from 'src/utility/cloudinary/cloudinary.service';
 import { ProductService } from '../product/product.service';
+import { Category, CategorySchema } from 'src/schemas/category.schema';
 
 @Module({
   imports: [
@@ -22,6 +23,10 @@ import { ProductService } from '../product/product.service';
       {
         name: TaxRate.name,
         schema: TaxRateSchema,
+      },
+      {
+        name: Category.name,
+        schema: CategorySchema,
       },
     ]),
   ],

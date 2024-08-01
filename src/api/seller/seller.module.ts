@@ -12,6 +12,7 @@ import {
   SellerOrderSchema,
 } from 'src/schemas/order.schema';
 import { Shipment, ShipmentSchema } from 'src/schemas/shipment.schema';
+import { Category, CategorySchema } from 'src/schemas/category.schema';
 
 @Module({
   imports: [
@@ -37,6 +38,10 @@ import { Shipment, ShipmentSchema } from 'src/schemas/shipment.schema';
       {
         name: Order.name,
         schema: OrderSchema,
+      },
+      {
+        name: Category.name,
+        schema: CategorySchema,
       },
     ]),
   ],

@@ -1,5 +1,4 @@
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
-import mongoose from 'mongoose';
 
 export class CreateCategoryDto {
   @IsNotEmpty()
@@ -16,6 +15,10 @@ export class CreateCategoryDto {
 
   @IsString()
   @IsOptional()
-  @IsNotEmpty()
-  subCategory: mongoose.Types.ObjectId;
+  parentId?: string;
+
+  // @IsString()
+  // @IsOptional()
+  // @IsNotEmpty()
+  // subCategory: mongoose.Types.ObjectId;
 }

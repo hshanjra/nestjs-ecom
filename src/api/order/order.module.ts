@@ -21,6 +21,7 @@ import {
   CheckoutSessionSchema,
 } from 'src/schemas/checkout-session.schema';
 import { StripeService } from 'src/utility/stripe/stripe.service';
+import { Category, CategorySchema } from 'src/schemas/category.schema';
 
 @Module({
   imports: [
@@ -56,6 +57,10 @@ import { StripeService } from 'src/utility/stripe/stripe.service';
       {
         name: Merchant.name,
         schema: MerchantSchema,
+      },
+      {
+        name: Category.name,
+        schema: CategorySchema,
       },
     ]),
   ],

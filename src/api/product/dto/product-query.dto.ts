@@ -11,6 +11,10 @@ export class ProductQueryDto {
 
   @IsString()
   @IsOptional()
+  category?: string;
+
+  @IsString()
+  @IsOptional()
   page?: string;
 
   @IsOptional()
