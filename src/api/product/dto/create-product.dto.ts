@@ -8,6 +8,7 @@ import {
   IsPositive,
   IsString,
   MaxLength,
+  MinLength,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -30,6 +31,7 @@ export class CreateProductDto {
   metaDescription: string;
 
   @IsString()
+  @MaxLength(500)
   shortDescription?: string;
 
   @IsString()
@@ -67,8 +69,9 @@ export class CreateProductDto {
 
   @IsNumberString()
   @IsNotEmpty()
-  @IsPositive()
+  // @IsPositive()
   @MaxLength(100)
+  @MinLength(0)
   productStock: number;
 
   @IsNumberString()
